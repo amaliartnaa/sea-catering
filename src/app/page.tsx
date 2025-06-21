@@ -17,7 +17,7 @@ export default function HomePage() {
 
       <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden">
         <Image
-          src="/hero-catering.jpg"
+          src="/images/hero-catering.jpg"
           alt="Healthy meals delivered"
           fill
           style={{ objectFit: "cover" }}
