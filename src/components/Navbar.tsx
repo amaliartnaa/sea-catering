@@ -5,10 +5,12 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const { user, logout, isLoading } = useAuth();
 
   const navLinks = [
     { name: "Home", href: "/" },
@@ -24,7 +26,7 @@ export default function Navbar() {
           SEA Catering
         </Link>
 
-        <div className="hidden md:flex space-x-6">
+        <div className="hidden md:flex items-center space-x-6">
           {navLinks.map((link) => (
             <Link key={link.name} href={link.href}>
               <Button
@@ -39,6 +41,32 @@ export default function Navbar() {
               </Button>
             </Link>
           ))}
+          {!isLoading &&
+            (user ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className="text-gray-300 hover:text-white text-lg"
+                >
+                  <Button variant="ghost">Dashboard</Button>
+                </Link>
+                <Button
+                  onClick={logout}
+                  className="bg-red-600 hover:bg-red-700 text-white text-lg"
+                >
+                  Logout
+                </Button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-gray-300 hover:text-white text-lg"
+                >
+                  <Button variant="ghost">Login</Button>
+                </Link>
+              </>
+            ))}
         </div>
 
         <div className="md:hidden">
@@ -85,6 +113,53 @@ export default function Navbar() {
                     </Button>
                   </Link>
                 ))}
+                {!isLoading &&
+                  (user ? (
+                    <>
+                      <Link
+                        href="/dashboard"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-xl text-gray-300 hover:text-white hover:bg-emerald-700"
+                        >
+                          Dashboard
+                        </Button>
+                      </Link>
+                      <Button
+                        onClick={() => {
+                          logout();
+                          setIsSheetOpen(false);
+                        }}
+                        className="w-full justify-start bg-red-600 hover:bg-red-700 text-white text-xl"
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <Link href="/login" onClick={() => setIsSheetOpen(false)}>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-xl text-gray-300 hover:text-white hover:bg-emerald-700"
+                        >
+                          Login
+                        </Button>
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-xl text-white border-white hover:bg-white hover:text-emerald-800"
+                        >
+                          Register
+                        </Button>
+                      </Link>
+                    </>
+                  ))}
               </div>
             </SheetContent>
           </Sheet>
