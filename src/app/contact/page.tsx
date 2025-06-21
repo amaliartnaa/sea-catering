@@ -55,7 +55,7 @@ export default function ContactPage() {
       alert("Harap lengkapi semua kolom testimoni.");
       return;
     }
-    
+
     console.log({ customerName, reviewMessage, rating });
     alert("Testimoni Anda telah diterima! (Belum disimpan ke database)");
     setCustomerName("");
