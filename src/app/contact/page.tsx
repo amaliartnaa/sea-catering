@@ -1,18 +1,12 @@
 "use client";
 
-import React, { useState } from "react";
-import { SAMPLE_TESTIMONIALS } from "@/src/lib/constants";
+import React, { useEffect, useState } from "react";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card";
+import { Card, CardContent } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
+import { Testimonial } from "@/src/types";
 
 const RatingStars = ({
   rating,
@@ -48,36 +42,107 @@ export default function ContactPage() {
   const [reviewMessage, setReviewMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
+  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
+  const [loadingTestimonials, setLoadingTestimonials] = useState(true);
+  const [submissionMessage, setSubmissionMessage] = useState("");
+  const [isSubmissionSuccess, setIsSubmissionSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmitTestimonial = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      setLoadingTestimonials(true);
+      try {
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setTestimonials(data);
+          if (data.length > 0) {
+            setCurrentTestimonialIndex(0);
+          }
+        } else {
+          console.error("Failed to fetch testimonials:", response.statusText);
+        }
+      } catch (error) {
+        console.error("Error fetching testimonials:", error);
+      } finally {
+        setLoadingTestimonials(false);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
+
+  const handleSubmitTestimonial = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!customerName || !reviewMessage || rating === 0) {
-      alert("Harap lengkapi semua kolom testimoni.");
+      setSubmissionMessage("Harap lengkapi semua kolom testimoni.");
+      setIsSubmissionSuccess(false);
       return;
     }
 
-    console.log({ customerName, reviewMessage, rating });
-    alert("Testimoni Anda telah diterima! (Belum disimpan ke database)");
-    setCustomerName("");
-    setReviewMessage("");
-    setRating(0);
+    setIsSubmitting(true);
+    setSubmissionMessage("");
+
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ customerName, reviewMessage, rating }),
+        },
+      );
+
+      if (response.ok) {
+        const newTestimonial = await response.json();
+        setSubmissionMessage(
+          newTestimonial.message || "Testimoni Anda berhasil dikirim!",
+        );
+        setIsSubmissionSuccess(true);
+        setTestimonials((prev: Testimonial[]) => [
+          newTestimonial.testimonial,
+          ...prev,
+        ]);
+        setCurrentTestimonialIndex(0);
+        setCustomerName("");
+        setReviewMessage("");
+        setRating(0);
+      } else {
+        const errorData = await response.json();
+        setSubmissionMessage(
+          errorData.message || "Gagal mengirim testimoni. Mohon coba lagi.",
+        );
+        setIsSubmissionSuccess(false);
+      }
+    } catch (error) {
+      console.error("Error submitting testimonial:", error);
+      setSubmissionMessage("Terjadi masalah koneksi saat mengirim testimoni.");
+      setIsSubmissionSuccess(false);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const nextTestimonial = () => {
+    if (testimonials.length === 0) return;
     setCurrentTestimonialIndex(
-      (prevIndex) => (prevIndex + 1) % SAMPLE_TESTIMONIALS.length,
+      (prevIndex) => (prevIndex + 1) % testimonials.length,
     );
   };
 
   const prevTestimonial = () => {
+    if (testimonials.length === 0) return;
     setCurrentTestimonialIndex(
       (prevIndex) =>
-        (prevIndex - 1 + SAMPLE_TESTIMONIALS.length) %
-        SAMPLE_TESTIMONIALS.length,
+        (prevIndex - 1 + testimonials.length) % testimonials.length,
     );
   };
 
-  const currentTestimonial = SAMPLE_TESTIMONIALS[currentTestimonialIndex];
+  const currentTestimonial = testimonials[currentTestimonialIndex];
 
   return (
     <div className="container mx-auto p-8 py-12">
@@ -109,6 +174,18 @@ export default function ContactPage() {
           onSubmit={handleSubmitTestimonial}
           className="max-w-xl mx-auto space-y-6"
         >
+          {submissionMessage && (
+            <div
+              className={cn(
+                "p-3 rounded-md text-center",
+                isSubmissionSuccess
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700",
+              )}
+            >
+              {submissionMessage}
+            </div>
+          )}
           <div>
             <label
               htmlFor="customerName"
@@ -151,8 +228,9 @@ export default function ContactPage() {
             <Button
               type="submit"
               className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-lg py-3 px-8 rounded-full"
+              disabled={isSubmitting}
             >
-              Kirim Testimoni
+              {isSubmitting ? "Mengirim..." : "Kirim Testimoni"}
             </Button>
           </div>
         </form>
@@ -162,47 +240,50 @@ export default function ContactPage() {
         <h2 className="text-4xl font-bold text-emerald-700 mb-8 text-center">
           Apa Kata Pelanggan Kami
         </h2>
-        {currentTestimonial && (
+        {loadingTestimonials ? (
+          <p className="text-center text-lg text-gray-600">
+            Memuat testimoni...
+          </p>
+        ) : testimonials.length > 0 ? (
           <Card className="max-w-2xl mx-auto bg-white shadow-md p-6 text-center">
-            <CardHeader>
-              {" "}
-              <CardTitle className="text-xl font-bold text-emerald-900 mb-2">
-                Testimoni dari {currentTestimonial.customerName}
-              </CardTitle>
-              <CardDescription className="text-sm text-gray-500">
-                Rating: {currentTestimonial.rating} bintang
-              </CardDescription>
-            </CardHeader>
             <CardContent className="flex flex-col items-center">
               <p className="text-2xl italic text-gray-800 mb-4 leading-relaxed">
-                &quot;{currentTestimonial.reviewMessage}&quot;
+                {currentTestimonial?.reviewMessage}
               </p>
-              <RatingStars rating={currentTestimonial.rating} />
+              <p className="font-bold text-xl text-emerald-900 mb-2">
+                - {currentTestimonial?.customerName}
+              </p>
+              <RatingStars rating={currentTestimonial?.rating || 0} />
             </CardContent>
           </Card>
-        )}
-        <div className="flex justify-between items-center mt-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={prevTestimonial}
-            className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100"
-          >
-            &#8592;
-          </Button>
-          <p className="text-lg text-gray-600">
-            Testimoni {currentTestimonialIndex + 1} dari{" "}
-            {SAMPLE_TESTIMONIALS.length}
+        ) : (
+          <p className="text-center text-lg text-gray-600">
+            Belum ada testimoni. Jadilah yang pertama!
           </p>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={nextTestimonial}
-            className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100"
-          >
-            &#8594;
-          </Button>
-        </div>
+        )}
+        {testimonials.length > 1 && (
+          <div className="flex justify-between items-center mt-8">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={prevTestimonial}
+              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100"
+            >
+              &#8592;
+            </Button>
+            <p className="text-lg text-gray-600">
+              Testimoni {currentTestimonialIndex + 1} dari {testimonials.length}
+            </p>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={nextTestimonial}
+              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100"
+            >
+              &#8594;
+            </Button>
+          </div>
+        )}
       </section>
     </div>
   );

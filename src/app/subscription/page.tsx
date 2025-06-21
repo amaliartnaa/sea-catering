@@ -37,6 +37,9 @@ export default function SubscriptionPage() {
   const [allergies, setAllergies] = useState<string>("");
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [message, setMessage] = useState<string>("");
+  const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
   const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
   const allDeliveryDays: DeliveryDay[] = [
@@ -99,12 +102,17 @@ export default function SubscriptionPage() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!isFormValid) {
-      alert("Harap lengkapi semua kolom yang wajib diisi (*).");
+      setMessage("Harap lengkapi semua kolom yang wajib diisi (*).");
+      setIsSuccess(false);
       return;
     }
+
+    setLoading(true);
+    setMessage("");
+    setIsSuccess(false);
 
     const formData = {
       customerName,
@@ -116,17 +124,40 @@ export default function SubscriptionPage() {
       totalPrice,
     };
 
-    console.log("Data Langganan yang akan dikirim:", formData);
-    alert(
-      "Formulir langganan berhasil disubmit! (Data masih tercetak di konsol. Integrasi backend akan dilakukan di langkah selanjutnya.)",
-    );
+    try {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        },
+      );
 
-    setCustomerName("");
-    setPhoneNumber("");
-    setSelectedPlanId("");
-    setSelectedMealTypes([]);
-    setSelectedDeliveryDays([]);
-    setAllergies("");
+      if (response.ok) {
+        const result = await response.json();
+        setMessage(result.message || "Berhasil berlangganan!");
+        setIsSuccess(true);
+        setCustomerName("");
+        setPhoneNumber("");
+        setSelectedPlanId("");
+        setSelectedMealTypes([]);
+        setSelectedDeliveryDays([]);
+        setAllergies("");
+      } else {
+        const errorData = await response.json();
+        setMessage(errorData.message || "Gagal berlangganan. Mohon coba lagi.");
+        setIsSuccess(false);
+      }
+    } catch (error) {
+      console.error("Network or server error:", error);
+      setMessage("Terjadi masalah koneksi. Mohon coba lagi.");
+      setIsSuccess(false);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -135,11 +166,23 @@ export default function SubscriptionPage() {
         Berlangganan Paket Makanan Sehat
       </h1>
 
+      {message && (
+        <div
+          className={cn(
+            "p-4 rounded-md mb-6 text-center",
+            isSuccess
+              ? "bg-green-100 text-green-700 border border-green-200"
+              : "bg-red-100 text-red-700 border border-red-200",
+          )}
+        >
+          {message}
+        </div>
+      )}
+
       <form
         onSubmit={handleSubmit}
         className="bg-white p-10 rounded-xl shadow-lg border border-gray-200 max-w-3xl mx-auto space-y-8"
       >
-        {/* Nama Lengkap */}
         <div className="grid w-full items-center gap-1.5">
           <Label htmlFor="customerName">
             Nama Lengkap <span className="text-red-500">*</span>
@@ -278,11 +321,11 @@ export default function SubscriptionPage() {
             type="submit"
             className={cn(
               "w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-lg py-3 px-10 rounded-full",
-              !isFormValid && "opacity-60 cursor-not-allowed",
+              (!isFormValid || loading) && "opacity-60 cursor-not-allowed",
             )}
-            disabled={!isFormValid}
+            disabled={!isFormValid || loading}
           >
-            Berlangganan Sekarang
+            {loading ? "Memproses..." : "Berlangganan Sekarang"}
           </Button>
         </div>
       </form>
