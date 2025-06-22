@@ -26,15 +26,13 @@ export default function Navbar() {
           SEA Catering
         </Link>
 
-        <div className="hidden md:flex items-center space-x-6">
+        <div className="hidden lg:flex items-center space-x-6">
           {navLinks.map((link) => (
             <Link key={link.name} href={link.href}>
               <Button
                 variant="ghost"
                 className={`text-lg transition-colors duration-200 ${
-                  pathname === link.href
-                    ? "text-white border-b-2 border-white"
-                    : "text-gray-300 hover:border-b-2 hover:border-gray-300"
+                  pathname === link.href ? " bg-white text-black" : "text-white"
                 }`}
               >
                 {link.name}
@@ -69,7 +67,7 @@ export default function Navbar() {
             ))}
         </div>
 
-        <div className="md:hidden">
+        <div className="lg:hidden">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-white">
@@ -92,7 +90,7 @@ export default function Navbar() {
             </SheetTrigger>
             <SheetContent
               side="right"
-              className="w-[250px] sm:w-[300px] bg-emerald-800 text-white border-l border-emerald-700 p-6"
+              className="w-[250px] sm:w-[300px] bg-white text-black border-l border-emerald-700 p-6"
             >
               <div className="flex flex-col space-y-4 pt-8">
                 {navLinks.map((link) => (
@@ -103,10 +101,10 @@ export default function Navbar() {
                   >
                     <Button
                       variant="ghost"
-                      className={`w-full justify-start text-xl transition-colors duration-200 ${
+                      className={`w-full justify-start text-md transition-colors duration-200 ${
                         pathname === link.href
                           ? "text-white bg-emerald-700"
-                          : "text-gray-300 hover:text-white hover:bg-emerald-700"
+                          : " hover:bg-white"
                       }`}
                     >
                       {link.name}
@@ -142,7 +140,7 @@ export default function Navbar() {
                       <Link href="/login" onClick={() => setIsSheetOpen(false)}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start text-xl text-gray-300 hover:text-white hover:bg-emerald-700"
+                          className="w-full justify-start text-md"
                         >
                           Login
                         </Button>
@@ -153,7 +151,7 @@ export default function Navbar() {
                       >
                         <Button
                           variant="outline"
-                          className="w-full justify-start text-xl text-white border-white hover:bg-white hover:text-emerald-800"
+                          className="w-full justify-start text-md text-black border-white hover:bg-white hover:text-emerald-800"
                         >
                           Register
                         </Button>

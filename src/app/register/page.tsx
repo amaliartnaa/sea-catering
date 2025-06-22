@@ -118,7 +118,7 @@ export default function RegisterPage() {
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <Input
                 id="fullName"
@@ -129,7 +129,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -140,7 +140,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="password">Password</Label>
               <Input
                 id="password"
@@ -151,7 +151,7 @@ export default function RegisterPage() {
                 required
               />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
               <Input
                 id="confirmPassword"
