@@ -117,3 +117,5 @@ App will be available at: [http://localhost:3000](http://localhost:3000)
 4. Save changes
 5. Restart backend: `pnpm run dev`
 6. Log out then log in again via frontend → you can now access `/admin/dashboard`
+
+---
