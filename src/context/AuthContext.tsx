@@ -9,7 +9,6 @@ import React, {
   useCallback,
 } from "react";
 import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
 
 interface User {
   userId: string;
@@ -20,7 +19,7 @@ interface User {
 
 interface AuthContextType {
   user: User | null;
-  login: (user: User) => void;
+  login: (newUser: User) => void;
   logout: () => void;
   isLoading: boolean;
   isAuthenticated: boolean;
@@ -44,20 +43,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         },
       );
 
-      if (response.ok) {
+      const contentType = response.headers.get("content-type") || "";
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Server error:", errorText);
+        throw new Error("Session invalid");
+      }
+
+      if (contentType.includes("application/json")) {
         const data = await response.json();
         setUser(data.user);
         setIsAuthenticated(true);
       } else {
-        setUser(null);
-        setIsAuthenticated(false);
-        Cookies.remove("token");
+        const raw = await response.text();
+        console.error("Expected JSON but got:", raw);
+        throw new Error("Invalid server response");
       }
     } catch (error) {
-      console.error("Failed to fetch user data:", error);
+      console.error("Failed to fetch user data or session invalid:", error);
       setUser(null);
       setIsAuthenticated(false);
-      Cookies.remove("token");
+      router.push("/login");
     } finally {
       setIsLoading(false);
     }
@@ -70,13 +76,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = (newUser: User) => {
     setUser(newUser);
     setIsAuthenticated(true);
+    setIsLoading(false);
   };
 
-  const logout = () => {
+  const logout = async () => {
     setUser(null);
     setIsAuthenticated(false);
-    Cookies.remove("token", { path: "/" });
-    router.push("/login");
+
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+    } catch (error) {
+      console.error("Error logging out on backend:", error);
+    } finally {
+      router.push("/login");
+    }
   };
 
   return (

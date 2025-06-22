@@ -57,6 +57,7 @@ export default function MenuPage() {
                   fill
                   style={{ objectFit: "cover" }}
                   className="rounded-t-lg"
+                  sizes=""
                 />
               </div>
             )}

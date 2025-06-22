@@ -126,14 +126,14 @@ export default function SubscriptionPage() {
   };
 
   const handleMealTypeChange = (mealType: MealType, checked: boolean) => {
-    setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.mealTypes;
-      return newErrors;
-    });
     setSelectedMealTypes((prev) =>
       checked ? [...prev, mealType] : prev.filter((m) => m !== mealType),
     );
+    setErrors((prev) => {
+      const rest = { ...prev };
+      delete rest.mealTypes;
+      return rest;
+    });
   };
 
   const handleDeliveryDayChange = (day: DeliveryDay, checked: boolean) => {
@@ -141,18 +141,18 @@ export default function SubscriptionPage() {
       checked ? [...prev, day] : prev.filter((d) => d !== day),
     );
     setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.deliveryDays;
-      return newErrors;
+      const rest = { ...prev };
+      delete rest.deliveryDays;
+      return rest;
     });
   };
 
   const handlePlanSelectChange = (value: string) => {
     setSelectedPlanId(value);
     setErrors((prev) => {
-      const newErrors = { ...prev };
-      delete newErrors.planId;
-      return newErrors;
+      const rest = { ...prev };
+      delete rest.planId;
+      return rest;
     });
   };
 
@@ -171,12 +171,7 @@ export default function SubscriptionPage() {
 
     let csrfToken;
     try {
-      const csrfResponse = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/csrf-token`,
-        {
-          credentials: "include",
-        },
-      );
+      const csrfResponse = await fetch("/api/csrf-token");
       if (!csrfResponse.ok) {
         throw new Error(
           "Failed to fetch CSRF token: HTTP error " + csrfResponse.status,
@@ -204,18 +199,14 @@ export default function SubscriptionPage() {
     };
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "CSRF-Token": csrfToken,
-          },
-          body: JSON.stringify(formData),
-          credentials: "include",
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken,
         },
-      );
+        body: JSON.stringify(formData),
+      });
 
       if (response.ok) {
         const result = await response.json();
