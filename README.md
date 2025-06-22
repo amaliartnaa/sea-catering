@@ -1,4 +1,4 @@
-# ✨ SEA Catering Frontend Application
+# SEA Catering Frontend Application
 
 Welcome to the frontend repository for the SEA Catering application! This project provides a user-friendly interface for customers to explore healthy meal plans, customize their orders, and manage their subscriptions. It also features an administrative dashboard for monitoring key business metrics.
 
