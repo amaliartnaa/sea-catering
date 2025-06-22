@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -12,9 +13,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/src/components/ui/card";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/src/context/AuthContext";
 import { cn } from "@/src/lib/utils";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
@@ -48,17 +48,18 @@ export default function LoginPage() {
         const result = await response.json();
         setMessage(result.message || "Login berhasil!");
         setIsSuccess(true);
-        login(result.token, result.user);
+        login(result.user);
 
         setEmail("");
         setPassword("");
 
-        setTimeout(() => {
-          router.push("/dashboard");
-        }, 1000);
+        const redirectFrom = new URLSearchParams(window.location.search).get(
+          "redirect_from",
+        );
+        router.push(redirectFrom || "/dashboard");
       } else {
         const errorData = await response.json();
-        setMessage(errorData.message || "Email atau password salah");
+        setMessage(errorData.message || "Email atau password salah.");
         setIsSuccess(false);
       }
     } catch (error) {

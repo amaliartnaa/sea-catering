@@ -42,25 +42,16 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const { user, isLoading } = useAuth();
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const { isLoading, isAuthenticated } = useAuth();
   const router = useRouter();
 
-  const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
-  const allDeliveryDays: DeliveryDay[] = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
-
   useEffect(() => {
-    if (!isLoading && !user) {
-      router.push("/login");
+    if (!isLoading && !isAuthenticated) {
+      router.push("/login?redirect_from=/subscription");
     }
-  }, [user, isLoading, router]);
+  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     const selectedPlan = MEAL_PLANS.find((plan) => plan.id === selectedPlanId);
@@ -96,37 +87,112 @@ export default function SubscriptionPage() {
     selectedDeliveryDays,
   ]);
 
-  if (isLoading || !user) {
-    return <div className="text-center p-8">Loading or redirecting...</div>;
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 text-center text-lg text-gray-700">
+        <p>Memuat atau mengarahkan ke halaman login...</p>
+      </div>
+    );
   }
 
-  const handleMealTypeChange = (mealType: MealType, checked: boolean) => {
-    if (checked) {
-      setSelectedMealTypes((prev) => [...prev, mealType]);
-    } else {
-      setSelectedMealTypes((prev) => prev.filter((m) => m !== mealType));
+  const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
+  const allDeliveryDays: DeliveryDay[] = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { id, value } = e.target;
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[id];
+      return newErrors;
+    });
+
+    if (id === "customerName") {
+      setCustomerName(value);
+    } else if (id === "phoneNumber") {
+      setPhoneNumber(value);
+    } else if (id === "allergies") {
+      setAllergies(value);
     }
   };
 
+  const handleMealTypeChange = (mealType: MealType, checked: boolean) => {
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.mealTypes;
+      return newErrors;
+    });
+    setSelectedMealTypes((prev) =>
+      checked ? [...prev, mealType] : prev.filter((m) => m !== mealType),
+    );
+  };
+
   const handleDeliveryDayChange = (day: DeliveryDay, checked: boolean) => {
-    if (checked) {
-      setSelectedDeliveryDays((prev) => [...prev, day]);
-    } else {
-      setSelectedDeliveryDays((prev) => prev.filter((d) => d !== day));
-    }
+    setSelectedDeliveryDays((prev) =>
+      checked ? [...prev, day] : prev.filter((d) => d !== day),
+    );
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.deliveryDays;
+      return newErrors;
+    });
+  };
+
+  const handlePlanSelectChange = (value: string) => {
+    setSelectedPlanId(value);
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors.planId;
+      return newErrors;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setMessage("");
+    setErrors({});
+    setIsSuccess(false);
+
     if (!isFormValid) {
       setMessage("Harap lengkapi semua kolom yang wajib diisi (*).");
-      setIsSuccess(false);
       return;
     }
 
     setLoading(true);
-    setMessage("");
-    setIsSuccess(false);
+
+    let csrfToken;
+    try {
+      const csrfResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/csrf-token`,
+        {
+          credentials: "include",
+        },
+      );
+      if (!csrfResponse.ok) {
+        throw new Error(
+          "Failed to fetch CSRF token: HTTP error " + csrfResponse.status,
+        );
+      }
+      const data = await csrfResponse.json();
+      if (!data.csrfToken) {
+        throw new Error("CSRF token not found in response");
+      }
+      csrfToken = data.csrfToken;
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+      setMessage("Gagal mendapatkan token keamanan. Mohon coba lagi.");
+      setLoading(false);
+      return;
+    }
 
     const formData = {
       customerName,
@@ -135,7 +201,6 @@ export default function SubscriptionPage() {
       mealTypes: selectedMealTypes,
       deliveryDays: selectedDeliveryDays,
       allergies: allergies.trim() === "" ? null : allergies,
-      totalPrice,
     };
 
     try {
@@ -145,8 +210,10 @@ export default function SubscriptionPage() {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
+            "CSRF-Token": csrfToken,
           },
           body: JSON.stringify(formData),
+          credentials: "include",
         },
       );
 
@@ -160,9 +227,27 @@ export default function SubscriptionPage() {
         setSelectedMealTypes([]);
         setSelectedDeliveryDays([]);
         setAllergies("");
+        setTotalPrice(0);
       } else {
         const errorData = await response.json();
-        setMessage(errorData.message || "Gagal berlangganan. Mohon coba lagi.");
+        if (response.status === 401 || response.status === 403) {
+          setMessage(
+            "Sesi Anda telah berakhir atau tidak memiliki izin. Silakan login kembali.",
+          );
+        } else if (response.status === 400 && errorData.errors) {
+          const newErrors: Record<string, string> = {};
+          errorData.errors.forEach((err: { path: string; message: string }) => {
+            newErrors[err.path] = err.message;
+          });
+          setErrors(newErrors);
+          setMessage(
+            "Terdapat kesalahan pada input Anda. Silakan periksa kembali.",
+          );
+        } else {
+          setMessage(
+            errorData.message || "Gagal berlangganan. Mohon coba lagi.",
+          );
+        }
         setIsSuccess(false);
       }
     } catch (error) {
@@ -206,9 +291,13 @@ export default function SubscriptionPage() {
             id="customerName"
             placeholder="Masukkan nama lengkap Anda"
             value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
+            onChange={handleChange}
             required
+            aria-invalid={errors.customerName ? "true" : "false"}
           />
+          {errors.customerName && (
+            <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
+          )}
         </div>
 
         <div className="grid w-full items-center gap-1.5">
@@ -220,11 +309,13 @@ export default function SubscriptionPage() {
             id="phoneNumber"
             placeholder="Contoh: 081234567890"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            pattern="[0-9]{10,13}"
-            title="Nomor telepon harus berupa angka, antara 10 sampai 13 digit."
+            onChange={handleChange}
             required
+            aria-invalid={errors.phoneNumber ? "true" : "false"}
           />
+          {errors.phoneNumber && (
+            <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
+          )}
         </div>
 
         <div className="grid w-full items-center gap-1.5">
@@ -233,10 +324,13 @@ export default function SubscriptionPage() {
           </Label>
           <Select
             value={selectedPlanId}
-            onValueChange={setSelectedPlanId}
+            onValueChange={handlePlanSelectChange}
             required
           >
-            <SelectTrigger id="planSelection">
+            <SelectTrigger
+              id="planSelection"
+              aria-invalid={errors.planId ? "true" : "false"}
+            >
               <SelectValue placeholder="-- Pilih Paket Makanan --" />
             </SelectTrigger>
             <SelectContent>
@@ -247,6 +341,9 @@ export default function SubscriptionPage() {
               ))}
             </SelectContent>
           </Select>
+          {errors.planId && (
+            <p className="text-red-500 text-sm mt-1">{errors.planId}</p>
+          )}
         </div>
 
         <div className="grid w-full gap-2">
@@ -273,6 +370,9 @@ export default function SubscriptionPage() {
             <p className="text-red-500 text-sm mt-1">
               Setidaknya satu jenis makanan harus dipilih.
             </p>
+          )}
+          {errors.mealTypes && (
+            <p className="text-red-500 text-sm mt-1">{errors.mealTypes}</p>
           )}
         </div>
 
@@ -304,6 +404,9 @@ export default function SubscriptionPage() {
               Setidaknya satu hari pengiriman harus dipilih.
             </p>
           )}
+          {errors.deliveryDays && (
+            <p className="text-red-500 text-sm mt-1">{errors.deliveryDays}</p>
+          )}
         </div>
 
         <div className="grid w-full gap-1.5">
@@ -314,8 +417,12 @@ export default function SubscriptionPage() {
             id="allergies"
             placeholder="Contoh: Alergi kacang, tidak suka pedas, gluten-free..."
             value={allergies}
-            onChange={(e) => setAllergies(e.target.value)}
+            onChange={handleChange}
+            aria-invalid={errors.allergies ? "true" : "false"}
           />
+          {errors.allergies && (
+            <p className="text-red-500 text-sm mt-1">{errors.allergies}</p>
+          )}
         </div>
 
         <div className="bg-emerald-50 p-6 rounded-lg text-center border border-emerald-200">
