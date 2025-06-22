@@ -1,36 +1,123 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ✨ SEA Catering Frontend Application
 
-## Getting Started
+Welcome to the frontend repository for the SEA Catering application! This project provides a user-friendly interface for customers to explore healthy meal plans, customize their orders, and manage their subscriptions. It also features an administrative dashboard for monitoring key business metrics.
 
-First, run the development server:
+This frontend is built with a modern and efficient stack, ensuring a smooth and responsive user experience across devices.
+
+> 🔗 **Backend Repository:** [SEA Catering Backend API](https://github.com/amaliartnaa/sea-catering-be)
+
+---
+
+## 🚀 Technologies Used
+
+- **Next.js**: A React framework for building fast, scalable, and SEO-friendly web applications
+- **React**: A JavaScript library for building user interfaces
+- **TypeScript**: Adds static typing for improved code quality and maintainability
+- **Tailwind CSS**: A utility-first CSS framework for rapid and consistent styling
+- **shadcn/ui**: Beautiful, accessible UI components built with Radix UI and Tailwind
+- **Recharts**: Charting library for data visualization
+- **date-fns**: Modern date utility library
+- **js-cookie**: Lightweight cookie handling API
+
+---
+
+## 🍽️ Key Features
+
+- **Homepage**: Engaging introduction to SEA Catering services
+- **Interactive Navigation**: Seamless user experience with responsive UI
+- **Meal Plans**: Browse and interact with meal plans and modal previews
+- **Testimonials**: Submit and view customer reviews via carousel
+- **Subscription System**:
+  - Customizable form with live price updates
+  - Secure submission to backend
+- **Authentication & Authorization**:
+  - Register, login, logout
+  - Protected routes (user & admin)
+- **User Dashboard**: View/pause/cancel/resume active subscriptions
+- **Admin Dashboard**: Business metrics with date range filtering & charts
+
+---
+
+## 🖥️ System Requirements
+
+- **Node.js** (LTS version 18.x or higher recommended)
+- **pnpm** (recommended)
+- Access to the SEA Catering Backend API (running locally or deployed)
+
+---
+
+## ⚙️ Installation & Local Setup Guide
+
+### 1. Clone the Repository
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/amaliartnaa/sea-catering-fe.git
+cd sea-catering-fe
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Install Dependencies
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+pnpm install
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 3. Environment Variables Configuration 🔐
 
-## Learn More
+Create a `.env.local` file in the project root:
 
-To learn more about Next.js, take a look at the following resources:
+```env
+# Environment Variables for SEA Catering Frontend
+NEXT_PUBLIC_BACKEND_URL="http://localhost:5000"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 4. Start Frontend ▶️
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+pnpm run dev
+```
 
-## Deploy on Vercel
+App will be available at: [http://localhost:3000](http://localhost:3000)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## ⚠️ Important Notes for Local Development
+
+- Make sure the **backend** is also running (e.g., `http://localhost:5000`)
+- The app uses **HTTP-only cookies** for auth, which can cause issues if switching ports or switching between http/https
+- Next.js **rewrites** proxy `/api` to the backend, resolving SameSite issues
+- If login doesn't persist after refresh, clear cookies or check `.env` setup
+
+---
+
+## 🔗 API Endpoints Used
+
+| Method | Endpoint                               | Description                              |
+| ------ | -------------------------------------- | ---------------------------------------- |
+| POST   | `/api/auth/register`                   | Register a new user                      |
+| POST   | `/api/auth/login`                      | Log in and receive auth cookie           |
+| GET    | `/api/auth/me`                         | Get current logged-in user info          |
+| POST   | `/api/auth/logout`                     | Log out and clear session                |
+| GET    | `/api/csrf-token`                      | Get CSRF token (for protected actions)   |
+| POST   | `/api/subscriptions`                   | Create a new subscription                |
+| GET    | `/api/subscriptions/me`                | View subscriptions for logged-in user    |
+| PUT    | `/api/subscriptions/:id/pause`         | Pause a subscription                     |
+| PUT    | `/api/subscriptions/:id/cancel`        | Cancel a subscription                    |
+| PUT    | `/api/subscriptions/:id/resume`        | Resume a subscription                    |
+| POST   | `/api/testimonials`                    | Submit a customer testimonial            |
+| GET    | `/api/testimonials`                    | View all testimonials                    |
+| GET    | `/api/admin/metrics?startDate&endDate` | Get business metrics for admin dashboard |
+
+---
+
+## 🧑‍💻 Guide for Testing Admin Access
+
+1. Stop the backend server: `Ctrl + C`
+2. Run Prisma Studio: `pnpm prisma studio`
+3. In the **User** table, update the target user's `role` to `admin`
+4. Save changes
+5. Restart backend: `pnpm run dev`
+6. Log out then log in again via frontend → you can now access `/admin/dashboard`
+
+---
+
+That's it! The frontend is ready to go 🎉
