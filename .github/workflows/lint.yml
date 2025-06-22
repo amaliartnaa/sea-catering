@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  pull_request:
+  pull_request: {}
 
 concurrency:
   group: ${{ github.job }}-${{ github.ref }}
@@ -21,10 +21,10 @@ jobs:
       - name: 🤌 Setup pnpm
         uses: pnpm/action-setup@v4
         with:
-          usePackageManager: true 
+          version: 8
 
       - name: ⎔ Setup node
-        uses: actions/setup-node@v4 
+        uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'pnpm'
@@ -33,7 +33,7 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: 🔬 Lint
-        run: pnpm run lint:strict 
+        run: pnpm run lint:strict
 
       - name: 🔎 Type check
         run: pnpm run typecheck
