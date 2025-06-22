@@ -72,6 +72,12 @@ export default function UserDashboardPage() {
     useState<Subscription | null>(null);
   const [cancelLoading, setCancelLoading] = useState(false);
   const [cancelMessage, setCancelMessage] = useState("");
+  const [isResumeConfirmationDialogOpen, setIsResumeConfirmationDialogOpen] =
+    useState(false);
+  const [selectedSubscriptionToResume, setSelectedSubscriptionToResume] =
+    useState<Subscription | null>(null);
+  const [resumeLoading, setResumeLoading] = useState(false);
+  const [resumeMessage, setResumeMessage] = useState("");
 
   const fetchUserSubscriptions = useCallback(async () => {
     setLoadingSubscriptions(true);
@@ -143,7 +149,7 @@ export default function UserDashboardPage() {
 
       if (response.ok) {
         const result = await response.json();
-        setPauseMessage(result.message || "Langganan berhasil dijeda!");
+        setPauseMessage(result.message);
         setIsSuccess(true);
         fetchUserSubscriptions();
         setIsPauseDialogOpen(false);
@@ -210,6 +216,53 @@ export default function UserDashboardPage() {
       setIsSuccess(false);
     } finally {
       setCancelLoading(false);
+    }
+  };
+
+  const handleResumeSubscription = async () => {
+    if (!selectedSubscriptionToResume) {
+      setResumeMessage("Langganan tidak ditemukan.");
+      return;
+    }
+
+    setResumeLoading(true);
+    setResumeMessage("");
+    try {
+      const csrfResponse = await fetch(`/api/csrf-token`, {
+        credentials: "include",
+      });
+      if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
+      const { csrfToken } = await csrfResponse.json();
+
+      const response = await fetch(
+        `/api/subscriptions/${selectedSubscriptionToResume.id}/resume`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "CSRF-Token": csrfToken,
+          },
+          credentials: "include",
+        },
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        setResumeMessage(result.message);
+        setIsSuccess(true);
+        fetchUserSubscriptions();
+        setIsResumeConfirmationDialogOpen(false);
+      } else {
+        const errorData = await response.json();
+        setResumeMessage(errorData.message || "Gagal melanjutkan langganan.");
+        setIsSuccess(false);
+      }
+    } catch (error) {
+      console.error("Error resuming subscription:", error);
+      setResumeMessage("Terjasi masalah koneksi.");
+      setIsSuccess(false);
+    } finally {
+      setResumeLoading(false);
     }
   };
 
@@ -328,8 +381,14 @@ export default function UserDashboardPage() {
                     </>
                   )}
                   {sub.status === "paused" && (
-                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
-                      Lanjutkan Langganan (Fitur ini belum diimplementasikan)
+                    <Button
+                      className="w-full bg-emerald-600 hover:bg-emerald-700"
+                      onClick={() => {
+                        setSelectedSubscriptionToResume(sub);
+                        setIsResumeConfirmationDialogOpen(true);
+                      }}
+                    >
+                      Lanjutkan Langganan
                     </Button>
                   )}
                 </CardFooter>
@@ -434,6 +493,47 @@ export default function UserDashboardPage() {
               disabled={cancelLoading}
             >
               {cancelLoading ? "Membatalkan..." : "Ya, Batalkan"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={isResumeConfirmationDialogOpen}
+        onOpenChange={setIsResumeConfirmationDialogOpen}
+      >
+        <DialogContent className="sm-max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Lanjutkan Langganan</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin melanjutkan langganan &quot;
+              {selectedSubscriptionToResume?.plan.name}&quot;? Status akan
+              diubah kembali menjadi aktif.
+            </DialogDescription>
+          </DialogHeader>
+          {resumeMessage && (
+            <p
+              className={cn(
+                "text-center text-sm",
+                isSuccess ? "text-green-600" : "text-red-600",
+              )}
+            >
+              {resumeMessage}
+            </p>
+          )}
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsResumeConfirmationDialogOpen(false)}
+            >
+              Tidak
+            </Button>
+            <Button
+              onClick={handleResumeSubscription}
+              disabled={resumeLoading}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {resumeLoading ? "Melanjutkan..." : "Ya, Lanjutkan"}
             </Button>
           </DialogFooter>
         </DialogContent>
