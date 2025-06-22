@@ -1,5 +1,7 @@
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { Button } from "../components/ui/button";
 
 export default function HomePage() {
   return (
@@ -29,11 +31,19 @@ export default function HomePage() {
             <h2 className="text-4xl md:text-5xl font-bold mb-4 animate-fade-in-up">
               Solusi Makanan Sehat untuk Gaya Hidup Modern Anda
             </h2>
-            <p className="text-lg md:text-xl max-w-2xl mx-auto animate-fade-in-up delay-200">
+            <p className="text-lg md:text-xl max-w-2xl mx-auto animate-fade-in-up delay-200 mb-8">
               SEA Catering menyediakan pilihan hidangan bergizi yang dapat
               disesuaikan, dikirim langsung ke seluruh penjuru Indonesia. Mulai
               hidup sehat Anda bersama kami!
             </p>
+            <Link href="/subscription">
+              <Button
+                size="lg"
+                className="bg-emerald-500 hover:bg-emerald-600 text-white text-xl py-6 px-10 rounded-full shadow-lg transition-transform transform hover:scale-105 animate-fade-in-up delay-400"
+              >
+                Mulai Berlangganan Sekarang!
+              </Button>
+            </Link>
           </div>
         </div>
       </section>

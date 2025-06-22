@@ -15,6 +15,8 @@ import { Checkbox } from "@/src/components/ui/checkbox";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 import { cn } from "@/src/lib/utils";
+import { useAuth } from "@/src/context/AuthContext";
+import { useRouter } from "next/navigation";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner";
 type DeliveryDay =
@@ -40,6 +42,8 @@ export default function SubscriptionPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const { user, isLoading } = useAuth();
+  const router = useRouter();
 
   const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
   const allDeliveryDays: DeliveryDay[] = [
@@ -51,6 +55,12 @@ export default function SubscriptionPage() {
     "Saturday",
     "Sunday",
   ];
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push("/login");
+    }
+  }, [user, isLoading, router]);
 
   useEffect(() => {
     const selectedPlan = MEAL_PLANS.find((plan) => plan.id === selectedPlanId);
@@ -85,6 +95,10 @@ export default function SubscriptionPage() {
     selectedMealTypes,
     selectedDeliveryDays,
   ]);
+
+  if (isLoading || !user) {
+    return <div className="text-center p-8">Loading or redirecting...</div>;
+  }
 
   const handleMealTypeChange = (mealType: MealType, checked: boolean) => {
     if (checked) {
