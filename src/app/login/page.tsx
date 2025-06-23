@@ -15,6 +15,8 @@ import {
 } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import { useAuth } from "@/src/context/AuthContext";
+import { Eye, EyeOff } from "lucide-react";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
 
 export default function LoginPage() {
   const [email, setEmail] = useState<string>("");
@@ -22,6 +24,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
 
   const router = useRouter();
   const { login } = useAuth();
@@ -69,6 +72,10 @@ export default function LoginPage() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
       <Card className="w-full max-w-md">
@@ -82,16 +89,23 @@ export default function LoginPage() {
         </CardHeader>
         <CardContent>
           {message && (
-            <div
+            <Alert
               className={cn(
-                "p-3 rounded-md text-sm mb-4 text-center",
+                "mb-4",
                 isSuccess
                   ? "bg-green-100 text-green-700"
                   : "bg-red-100 text-red-700",
               )}
             >
-              {message}
-            </div>
+              <AlertDescription
+                className={cn(
+                  "text-sm",
+                  isSuccess ? "text-green-700" : "text-red-700",
+                )}
+              >
+                {message}
+              </AlertDescription>
+            </Alert>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col gap-2">
@@ -99,6 +113,7 @@ export default function LoginPage() {
               <Input
                 id="email"
                 type="email"
+                className="placeholder:text-sm text-sm"
                 placeholder="email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -107,14 +122,27 @@ export default function LoginPage() {
             </div>
             <div className="flex flex-col gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="placeholder:text-sm pr-10 text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-500" />
+                  )}
+                </div>
+              </div>
             </div>
             <Button
               type="submit"
