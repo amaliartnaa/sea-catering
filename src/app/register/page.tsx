@@ -14,6 +14,8 @@ import {
 } from "@/src/components/ui/card";
 import { useRouter } from "next/navigation";
 import { cn } from "@/src/lib/utils";
+import { Alert, AlertDescription } from "@/src/components/ui/alert";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState<string>("");
@@ -23,6 +25,9 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState<boolean>(false);
   const [message, setMessage] = useState<string>("");
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [showPassword, setShowPassword] = useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] =
+    useState<boolean>(false);
 
   const router = useRouter();
 
@@ -52,7 +57,7 @@ export default function RegisterPage() {
       return;
     }
     if (password !== confirmPassword) {
-      setMessage("Password belum sama.");
+      setMessage("Konfirmasi Password tidak sama dengan Password.");
       return;
     }
 
@@ -71,11 +76,12 @@ export default function RegisterPage() {
 
       if (response.ok) {
         const result = await response.json();
-        setMessage(result.message || "Pendaftaran berhasil! Silahkan login.");
+        setMessage(result.message || "Pendaftaran berhasil! Silakan login.");
         setIsSuccess(true);
         setFullName("");
         setEmail("");
         setPassword("");
+        setConfirmPassword("");
         setTimeout(() => {
           router.push("/login");
         }, 2000);
@@ -93,8 +99,16 @@ export default function RegisterPage() {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword((prev) => !prev);
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4">
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 p-4 py-16 lg:py-auto">
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <CardTitle className="text-3xl font-bold text-emerald-800">
@@ -106,62 +120,99 @@ export default function RegisterPage() {
         </CardHeader>
         <CardContent>
           {message && (
-            <div
+            <Alert
               className={cn(
-                "p-3 rounded-md text-sm mb-4 text-center",
+                "mb-4",
                 isSuccess
-                  ? "bg-green-199 text-green-700"
+                  ? "bg-green-100 text-green-700"
                   : "bg-red-100 text-red-700",
               )}
             >
-              {message}
-            </div>
+              <AlertDescription
+                className={cn(
+                  "text-sm",
+                  isSuccess ? "text-green-700" : "text-red-700",
+                )}
+              >
+                {message}
+              </AlertDescription>
+            </Alert>
           )}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="fullName">Nama Lengkap</Label>
               <Input
                 id="fullName"
                 type="text"
+                className="placeholder:text-sm text-sm"
                 placeholder="Nama lengkap Anda"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 required
               />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
+                className="placeholder:text-sm text-sm"
                 placeholder="email@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
               />
             </div>
-            <div>
+            <div className="flex flex-col gap-2">
               <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Minimal 8 karakter (termasuk huruf besar, kecil, angka, spesial)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  className="placeholder:text-sm pr-10 text-sm"
+                  placeholder="Minimal 8 karakter"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                  onClick={togglePasswordVisibility}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-500" />
+                  )}
+                </div>
+              </div>
             </div>
-            <div>
+
+            <div className="flex flex-col gap-2">
               <Label htmlFor="confirmPassword">Konfirmasi Password</Label>
-              <Input
-                id="confirmPassword"
-                type="password"
-                placeholder="Ketik ulang password Anda"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-              />
+              <div className="relative">
+                <Input
+                  id="confirmPassword"
+                  type={showConfirmPassword ? "text" : "password"}
+                  className="placeholder:text-sm pr-10 text-sm"
+                  placeholder="Ketik ulang password Anda"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                />
+                <div
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                  onClick={toggleConfirmPasswordVisibility}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff className="h-5 w-5 text-gray-500" />
+                  ) : (
+                    <Eye className="h-5 w-5 text-gray-500" />
+                  )}
+                </div>
+              </div>
             </div>
+
             <Button
               type="submit"
               className="w-full bg-emerald-600 hover:bg-emerald-700"

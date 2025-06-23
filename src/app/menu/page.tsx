@@ -50,14 +50,14 @@ export default function MenuPage() {
             className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
             {plan.image && (
-              <div className="relative w-full h-48 bg-gray-100">
+              <div className="relative h-48 bg-white">
                 <Image
                   src={plan.image}
                   alt={plan.name}
                   fill
                   style={{ objectFit: "cover" }}
-                  className="rounded-t-lg"
-                  sizes=""
+                  priority
+                  className="rounded-lg"
                 />
               </div>
             )}

@@ -1,4 +1,4 @@
-# ✨ SEA Catering Frontend Application
+# SEA Catering Frontend Application
 
 Welcome to the frontend repository for the SEA Catering application! This project provides a user-friendly interface for customers to explore healthy meal plans, customize their orders, and manage their subscriptions. It also features an administrative dashboard for monitoring key business metrics.
 
@@ -119,5 +119,3 @@ App will be available at: [http://localhost:3000](http://localhost:3000)
 6. Log out then log in again via frontend → you can now access `/admin/dashboard`
 
 ---
-
-That's it! The frontend is ready to go 🎉

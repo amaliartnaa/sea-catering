@@ -147,24 +147,8 @@ export default function ContactPage() {
   return (
     <div className="container mx-auto p-8 py-12">
       <h1 className="text-5xl font-extrabold text-center text-emerald-800 mb-12">
-        Hubungi Kami & Testimoni Pelanggan
+        Testimoni Pelanggan
       </h1>
-
-      <section className="mb-16 bg-white p-10 rounded-xl shadow-lg border border-gray-200 text-center">
-        <h2 className="text-4xl font-bold text-emerald-700 mb-6">
-          Informasi Kontak
-        </h2>
-        <p className="text-lg text-gray-700 mb-2">
-          Manager: <span className="font-semibold">Brian</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          Nomor Telepon: <span className="font-semibold">08123456789</span>
-        </p>
-        <p className="mt-6 text-gray-600 text-md">
-          Jangan ragu untuk menghubungi kami untuk pertanyaan, saran, atau
-          bantuan lebih lanjut!
-        </p>
-      </section>
 
       <section className="mb-16 bg-white p-10 rounded-xl shadow-lg border border-gray-200">
         <h2 className="text-4xl font-bold text-emerald-700 mb-8 text-center">
@@ -236,7 +220,7 @@ export default function ContactPage() {
         </form>
       </section>
 
-      <section className="bg-emerald-50 p-10 rounded-xl shadow-lg border border-emerald-200 relative">
+      <section className="mb-16 bg-emerald-50 p-10 rounded-xl shadow-lg border border-emerald-200 relative">
         <h2 className="text-4xl font-bold text-emerald-700 mb-8 text-center">
           Apa Kata Pelanggan Kami
         </h2>
@@ -284,6 +268,22 @@ export default function ContactPage() {
             </Button>
           </div>
         )}
+      </section>
+
+      <section className="bg-white p-10 rounded-xl shadow-lg border border-gray-200 text-center">
+        <h2 className="text-4xl font-bold text-emerald-700 mb-6">
+          Informasi Kontak
+        </h2>
+        <p className="text-lg text-gray-700 mb-2">
+          Manager: <span className="font-semibold">Brian</span>
+        </p>
+        <p className="text-lg text-gray-700">
+          Nomor Telepon: <span className="font-semibold">08123456789</span>
+        </p>
+        <p className="mt-6 text-gray-600 text-md">
+          Jangan ragu untuk menghubungi kami untuk pertanyaan, saran, atau
+          bantuan lebih lanjut!
+        </p>
       </section>
     </div>
   );
