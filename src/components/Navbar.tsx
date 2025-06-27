@@ -21,28 +21,49 @@ import {
   DialogTitle,
 } from "@/src/components/ui/dialog";
 
+import {
+  FaHome,
+  FaUtensils,
+  FaClipboardList,
+  FaEnvelope,
+  FaTachometerAlt,
+  FaUserCog,
+} from "react-icons/fa";
+import { IconType } from "react-icons";
+import { FiLogIn, FiLogOut, FiUserPlus } from "react-icons/fi";
+import { RxHamburgerMenu } from "react-icons/rx";
+
+interface NavLinkItem {
+  name: string;
+  href: string;
+  icon?: IconType;
+}
+
 export default function Navbar() {
   const pathname = usePathname();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
 
-  const commonLinks = [
-    { name: "Menu / Meal Plans", href: "/menu" },
-    { name: "Subscription", href: "/subscription" },
-    { name: "Contact Us", href: "/contact" },
+  const commonLinks: NavLinkItem[] = [
+    { name: "Menu / Meal Plans", href: "/menu", icon: FaUtensils },
+    { name: "Subscription", href: "/subscription", icon: FaClipboardList },
+    { name: "Contact Us", href: "/contact", icon: FaEnvelope },
   ];
 
-  const loggedOutLinks = [{ name: "Home", href: "/" }, ...commonLinks];
+  const loggedOutLinks: NavLinkItem[] = [
+    { name: "Home", href: "/", icon: FaHome },
+    ...commonLinks,
+  ];
 
-  let loggedInLinksBasedOnRole;
+  let loggedInLinksBasedOnRole: NavLinkItem[];
   if (user?.role === "admin") {
     loggedInLinksBasedOnRole = [
-      { name: "Admin Dashboard", href: "/admin/dashboard" },
+      { name: "Admin Dashboard", href: "/admin/dashboard", icon: FaUserCog },
     ];
   } else {
     loggedInLinksBasedOnRole = [
-      { name: "Dashboard", href: "/dashboard" },
+      { name: "Dashboard", href: "/dashboard", icon: FaTachometerAlt },
       ...commonLinks,
     ];
   }
@@ -57,12 +78,109 @@ export default function Navbar() {
 
   return (
     <nav className="bg-emerald-800 p-4 shadow-lg sticky top-0 z-50">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-white text-3xl font-bold tracking-wide">
-          SEA Catering
-        </Link>
+      <div className="container mx-auto flex items-center justify-between">
+        <div className="lg:hidden">
+          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+            <SheetTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:text-white hover:bg-emerald-800"
+              >
+                <RxHamburgerMenu className="!h-8 !w-8" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent
+              side="left"
+              className="w-[250px] sm:w-[300px] bg-white text-black border-r border-emerald-700 p-6 flex flex-col"
+            >
+              <SheetHeader>
+                <SheetTitle className="text-2xl text-gray-800">
+                  SEA Catering Menu
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 flex-grow">
+                {isLoading ? (
+                  <div className="text-gray-600">Memuat...</div>
+                ) : (
+                  <>
+                    {displayNavLinks.map((link) => (
+                      <Link
+                        key={link.name}
+                        href={link.href}
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        <Button
+                          variant="ghost"
+                          className={`w-full justify-start text-md py-6 transition-colors duration-200 flex items-center gap-3 ${
+                            pathname === link.href
+                              ? "text-white bg-emerald-700 hover:bg-emerald-700"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          {link.icon && <link.icon className="h-5 w-5" />}
+                          {link.name}
+                        </Button>
+                      </Link>
+                    ))}
+                  </>
+                )}
+              </div>
 
-        <div className="hidden lg:flex items-center space-x-6">
+              {!isLoading && (
+                <div className="mt-auto pt-4 border-t border-gray-200 space-y-4">
+                  {user ? (
+                    <Button
+                      onClick={() => {
+                        setIsLogoutConfirmOpen(true);
+                        setIsSheetOpen(false);
+                      }}
+                      className="w-full py-6 justify-start text-md bg-red-600 hover:bg-red-700 text-white flex items-center gap-3"
+                    >
+                      <FiLogOut className="h-5 w-5" />
+                      Logout
+                    </Button>
+                  ) : (
+                    <div className="flex flex-col gap-4">
+                      <Link href="/login" onClick={() => setIsSheetOpen(false)}>
+                        <Button
+                          variant="ghost"
+                          className="w-full justify-start text-md py-6 bg-emerald-600 hover:bg-emerald-600 text-white hover:text-white flex items-center gap-3"
+                        >
+                          <FiLogIn className="h-5 w-5" />
+                          Login
+                        </Button>
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setIsSheetOpen(false)}
+                      >
+                        <Button
+                          variant="outline"
+                          className="w-full justify-start text-md border-emerald-800 bg-gray-100 py-6 text-emerald-800 hover:text-emerald-800 flex items-center gap-3"
+                        >
+                          <FiUserPlus className="h-5 w-5" />
+                          Register
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        <div className="flex-grow flex justify-center lg:justify-start">
+          <Link
+            href="/"
+            className="text-white text-3xl font-bold tracking-wide"
+          >
+            SEA Catering
+          </Link>
+        </div>
+
+        <div className="hidden lg:flex items-center space-x-6 flex-shrink-0">
           {isLoading ? (
             <div className="text-white">Memuat...</div>
           ) : (
@@ -110,100 +228,6 @@ export default function Navbar() {
               )}
             </>
           )}
-        </div>
-
-        <div className="lg:hidden">
-          <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
-            <SheetTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="text-white hover:text-white hover:bg-emerald-800"
-              >
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 6h16M4 12h16m-7 6h7"
-                  ></path>
-                </svg>
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent
-              side="right"
-              className="w-[250px] sm:w-[300px] bg-white text-black border-l border-emerald-700 p-6 flex flex-col"
-            >
-              <SheetHeader>
-                <SheetTitle className="text-2xl">SEA Catering Menu</SheetTitle>
-              </SheetHeader>
-              <div className="flex flex-col space-y-4 flex-grow">
-                {displayNavLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsSheetOpen(false)}
-                  >
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-md py-6 transition-colors duration-200 ${
-                        pathname === link.href
-                          ? "text-white hover:text-white bg-emerald-700 hover:bg-emerald-700"
-                          : " hover:bg-white"
-                      }`}
-                    >
-                      {link.name}
-                    </Button>
-                  </Link>
-                ))}
-              </div>
-
-              {!isLoading && (
-                <div className="mt-auto pt-4 border-t border-gray-200 space-y-4">
-                  {user ? (
-                    <Button
-                      onClick={() => {
-                        setIsLogoutConfirmOpen(true);
-                        setIsSheetOpen(false);
-                      }}
-                      className="w-full py-6 justify-start text-md bg-red-600 hover:bg-red-700 text-white"
-                    >
-                      Logout
-                    </Button>
-                  ) : (
-                    <div className="flex flex-col gap-4">
-                      <Link href="/login" onClick={() => setIsSheetOpen(false)}>
-                        <Button
-                          variant="ghost"
-                          className="w-full justify-start text-md py-6 bg-emerald-600 hover:bg-emerald-600 text-white hover:text-white"
-                        >
-                          Login
-                        </Button>
-                      </Link>
-                      <Link
-                        href="/register"
-                        onClick={() => setIsSheetOpen(false)}
-                      >
-                        <Button
-                          variant="outline"
-                          className="w-full justify-start text-md border-emerald-800 bg-gray-100 py-6 text-emerald-800 hover:text-emerald-800"
-                        >
-                          Register
-                        </Button>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              )}
-            </SheetContent>
-          </Sheet>
         </div>
       </div>
 
