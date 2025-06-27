@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
 import { Testimonial } from "@/src/types/index";
 import { SAMPLE_TESTIMONIALS } from "@/src/lib/constants";
-import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
+import { FaArrowLeft, FaArrowRight, FaStar } from "react-icons/fa";
 
 const RatingStars = ({
   rating,
@@ -18,26 +18,30 @@ const RatingStars = ({
   rating: number;
   setRating?: (r: number) => void;
   editable?: boolean;
-}) => (
-  <div className="flex justify-center mb-2">
-    {[1, 2, 3, 4, 5].map((star) => (
-      <svg
-        key={star}
-        className={cn(
-          "w-6 h-6",
-          star <= rating ? "text-yellow-400" : "text-gray-300",
-          editable ? "cursor-pointer hover:text-yellow-500" : "",
-        )}
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        xmlns="http://www.w3.org/2000/svg"
-        onClick={editable ? () => setRating?.(star) : undefined}
-      >
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.286 3.961a1 1 0 00.95.69h4.17c.969 0 1.371 1.24.588 1.81l-3.374 2.453a1 1 0 00-.364 1.118l1.287 3.961c.3.921-.755 1.688-1.539 1.118l-3.374-2.453a1 1 0 00-1.176 0l-3.374 2.453c-.784.57-1.838-.197-1.539-1.118l1.287-3.961a1 1 0 00-.364-1.118L2.05 9.388c-.783-.57-.381-1.81.588-1.81h4.17a1 1 0 00.95-.69l1.286-3.961z" />
-      </svg>
-    ))}
-  </div>
-);
+}) => {
+  const [hoverRating, setHoverRating] = useState(0);
+
+  const currentFillLevel = hoverRating > 0 ? hoverRating : rating;
+
+  return (
+    <div className="flex justify-center mb-2">
+      {[1, 2, 3, 4, 5].map((star) => (
+        <FaStar
+          key={star}
+          className={cn(
+            "w-6 h-6",
+            star <= currentFillLevel ? "text-yellow-400" : "text-gray-300",
+            editable ? "cursor-pointer hover:text-yellow-500" : "",
+          )}
+          fill="currentColor"
+          onMouseEnter={editable ? () => setHoverRating(star) : undefined}
+          onMouseLeave={editable ? () => setHoverRating(0) : undefined}
+          onClick={editable ? () => setRating?.(star) : undefined}
+        />
+      ))}
+    </div>
+  );
+};
 
 export default function ContactPage() {
   const [customerName, setCustomerName] = useState("");
@@ -94,9 +98,8 @@ export default function ContactPage() {
       });
 
       if (response.ok) {
-        const newTestimonial = await response.json();
         setSubmissionMessage(
-          newTestimonial.message || "Testimoni Anda berhasil dikirim!",
+          "Testimoni Anda berhasil dikirim! Terimakasih atas testimoni Anda:)",
         );
         setIsSubmissionSuccess(true);
 
@@ -104,10 +107,7 @@ export default function ContactPage() {
         setReviewMessage("");
         setRating(0);
       } else {
-        const errorData = await response.json();
-        setSubmissionMessage(
-          errorData.message || "Gagal mengirim testimoni. Mohon coba lagi.",
-        );
+        setSubmissionMessage("Gagal mengirim testimoni. Mohon coba lagi.");
         setIsSubmissionSuccess(false);
       }
     } catch (error) {
@@ -222,9 +222,9 @@ export default function ContactPage() {
             Belum ada testimoni. Jadilah yang pertama!
           </p>
         ) : (
-          <Card className="max-w-2xl mx-auto bg-white shadow-md p-6 text-center">
+          <Card className="max-w-2xl mx-auto bg-white shadow-md sm:p-6 text-center">
             <CardContent className="flex flex-col items-center">
-              <p className="text-2xl italic text-gray-800 mb-4 leading-relaxed">
+              <p className="sm:text-2xl italic text-gray-800 mb-4 leading-relaxed">
                 {currentTestimonial?.reviewMessage}
               </p>
               <p className="font-bold text-xl text-emerald-900 mb-2">
@@ -244,9 +244,8 @@ export default function ContactPage() {
             >
               <FaArrowLeft />
             </Button>
-            <p className="text-lg text-gray-600">
-              Testimoni {currentTestimonialIndex + 1} dari{" "}
-              {displayedTestimonials.length}
+            <p className="sm:text-lg text-gray-600">
+              {currentTestimonialIndex + 1} dari {displayedTestimonials.length}
             </p>
             <Button
               variant="outline"

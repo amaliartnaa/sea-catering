@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -15,7 +15,7 @@ import {
 import { useRouter } from "next/navigation";
 import { cn } from "@/src/lib/utils";
 import { Alert, AlertDescription } from "@/src/components/ui/alert";
-import { Eye, EyeOff } from "lucide-react";
+import { Check, Eye, EyeOff, X } from "lucide-react";
 
 export default function RegisterPage() {
   const [fullName, setFullName] = useState<string>("");
@@ -29,12 +29,43 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] =
     useState<boolean>(false);
 
+  const [hasMinLength, setHasMinLength] = useState(false);
+  const [hasUpperCase, setHasUpperCase] = useState(false);
+  const [hasLowerCase, setHasLowerCase] = useState(false);
+  const [hasNumber, setHasNumber] = useState(false);
+  const [hasSpecialChar, setHasSpecialChar] = useState(false);
+  const [passwordsMatch, setPasswordsMatch] = useState(false);
+
   const router = useRouter();
+
+  useEffect(() => {
+    setHasMinLength(password.length >= 8);
+    setHasUpperCase(/[A-Z]/.test(password));
+    setHasLowerCase(/[a-z]/.test(password));
+    setHasNumber(/[0-9]/.test(password));
+    setHasSpecialChar(/[^A-Za-z0-9]/.test(password));
+    setPasswordsMatch(password === confirmPassword && password.length > 0);
+  }, [password, confirmPassword]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setMessage("");
     setIsSuccess(false);
+
+    if (
+      !hasMinLength ||
+      !hasUpperCase ||
+      !hasLowerCase ||
+      !hasNumber ||
+      !hasSpecialChar
+    ) {
+      setMessage("Password tidak memenuhi semua kriteria kekuatan.");
+      return;
+    }
+    if (!passwordsMatch) {
+      setMessage("Konfirmasi Password tidak sama dengan Password.");
+      return;
+    }
 
     if (password.length < 8) {
       setMessage("Password harus minimal 8 karakter.");
@@ -75,8 +106,7 @@ export default function RegisterPage() {
       );
 
       if (response.ok) {
-        const result = await response.json();
-        setMessage(result.message || "Pendaftaran berhasil! Silakan login.");
+        setMessage("Pendaftaran berhasil! Silakan login.");
         setIsSuccess(true);
         setFullName("");
         setEmail("");
@@ -86,8 +116,7 @@ export default function RegisterPage() {
           router.push("/login");
         }, 2000);
       } else {
-        const errorData = await response.json();
-        setMessage(errorData.message || "Pendaftaran gagal. Mohon coba lagi.");
+        setMessage("Pendaftaran gagal. Mohon coba lagi.");
         setIsSuccess(false);
       }
     } catch (error) {
@@ -102,6 +131,25 @@ export default function RegisterPage() {
   const togglePasswordVisibility = () => {
     setShowPassword((prev) => !prev);
   };
+
+  const PasswordCriteria = ({
+    label,
+    isValid,
+  }: {
+    label: string;
+    isValid: boolean;
+  }) => (
+    <div className="flex items-center gap-2 text-sm">
+      {isValid ? (
+        <Check className="h-4 w-4 text-green-500" />
+      ) : (
+        <X className="h-4 w-4 text-red-500" />
+      )}
+      <span className={isValid ? "text-gray-700" : "text-gray-500"}>
+        {label}
+      </span>
+    </div>
+  );
 
   const toggleConfirmPasswordVisibility = () => {
     setShowConfirmPassword((prev) => !prev);
@@ -119,25 +167,6 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {message && (
-            <Alert
-              className={cn(
-                "mb-4",
-                isSuccess
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700",
-              )}
-            >
-              <AlertDescription
-                className={cn(
-                  "text-sm",
-                  isSuccess ? "text-green-700" : "text-red-700",
-                )}
-              >
-                {message}
-              </AlertDescription>
-            </Alert>
-          )}
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="flex flex-col gap-2">
               <Label htmlFor="fullName">Nama Lengkap</Label>
@@ -170,7 +199,7 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   className="placeholder:text-sm pr-10 text-sm"
-                  placeholder="Minimal 8 karakter"
+                  placeholder="Password Anda"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -185,6 +214,28 @@ export default function RegisterPage() {
                     <Eye className="h-5 w-5 text-gray-500" />
                   )}
                 </div>
+              </div>
+              <div className="mt-2 text-gray-600 space-y-1">
+                <PasswordCriteria
+                  label="Minimal 8 karakter"
+                  isValid={hasMinLength}
+                />
+                <PasswordCriteria
+                  label="Satu huruf kapital (A-Z)"
+                  isValid={hasUpperCase}
+                />
+                <PasswordCriteria
+                  label="Satu huruf kecil (a-z)"
+                  isValid={hasLowerCase}
+                />
+                <PasswordCriteria
+                  label="Satu angka (0-9)"
+                  isValid={hasNumber}
+                />
+                <PasswordCriteria
+                  label="Satu karakter khusus (!@#$%^&*)"
+                  isValid={hasSpecialChar}
+                />
               </div>
             </div>
 
@@ -211,8 +262,33 @@ export default function RegisterPage() {
                   )}
                 </div>
               </div>
+              {password.length > 0 && (
+                <PasswordCriteria
+                  label="Password cocok"
+                  isValid={passwordsMatch}
+                />
+              )}
             </div>
 
+            {message && (
+              <Alert
+                className={cn(
+                  "mb-4",
+                  isSuccess
+                    ? "bg-green-100 text-green-700"
+                    : "bg-red-100 text-red-700",
+                )}
+              >
+                <AlertDescription
+                  className={cn(
+                    "text-sm",
+                    isSuccess ? "text-green-700" : "text-red-700",
+                  )}
+                >
+                  {message}
+                </AlertDescription>
+              </Alert>
+            )}
             <Button
               type="submit"
               className="w-full bg-emerald-600 hover:bg-emerald-700 cursor-pointer"

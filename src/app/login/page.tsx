@@ -46,7 +46,7 @@ export default function LoginPage() {
 
       if (response.ok) {
         const result = await response.json();
-        setMessage(result.message || "Login berhasil!");
+        setMessage("Login berhasil!");
         setIsSuccess(true);
 
         login(result.user);
@@ -59,8 +59,7 @@ export default function LoginPage() {
         );
         router.push(redirectFrom || "/dashboard");
       } else {
-        const errorData = await response.json();
-        setMessage(errorData.message || "Email atau password salah.");
+        setMessage("Email atau password salah.");
         setIsSuccess(false);
       }
     } catch (error) {

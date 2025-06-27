@@ -1,9 +1,37 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
 import { FaFacebook, FaTwitter, FaInstagram } from "react-icons/fa";
+import { useAuth } from "@/src/context/AuthContext";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
+  const { user, isLoading } = useAuth();
+
+  const commonLinks = [
+    { name: "Menu / Meal Plans", href: "/menu" },
+    { name: "Subscription", href: "/subscription" },
+    { name: "Contact Us", href: "/contact" },
+  ];
+
+  let exploreLinks;
+  if (user) {
+    if (user.role === "admin") {
+      exploreLinks = [{ name: "Admin Dashboard", href: "/admin/dashboard" }];
+      exploreLinks = [
+        { name: "Admin Dashboard", href: "/admin/dashboard" },
+        ...commonLinks,
+      ];
+    } else {
+      exploreLinks = [
+        { name: "Dashboard", href: "/dashboard" },
+        ...commonLinks,
+      ];
+    }
+  } else {
+    exploreLinks = [{ name: "Home", href: "/" }, ...commonLinks];
+  }
 
   return (
     <footer className="bg-emerald-800 text-white p-8 md:p-12 shadow-inner mt-auto">
@@ -22,38 +50,20 @@ export default function Footer() {
               Jelajahi
             </h3>
             <ul className="space-y-2 text-md">
-              <li>
-                <Link
-                  href="/"
-                  className="hover:text-emerald-300 transition-colors duration-200"
-                >
-                  Home
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/menu"
-                  className="hover:text-emerald-300 transition-colors duration-200"
-                >
-                  Menu / Meal Plans
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/subscription"
-                  className="hover:text-emerald-300 transition-colors duration-200"
-                >
-                  Subscription
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/contact"
-                  className="hover:text-emerald-300 transition-colors duration-200"
-                >
-                  Contact Us
-                </Link>
-              </li>
+              {isLoading ? (
+                <li>Memuat...</li>
+              ) : (
+                exploreLinks.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      href={link.href}
+                      className="hover:text-emerald-300 transition-colors duration-200"
+                    >
+                      {link.name}
+                    </Link>
+                  </li>
+                ))
+              )}
             </ul>
           </div>
           <div className="hidden lg:block">
@@ -64,8 +74,8 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="border-t border-emerald-600 pt-8 mt-auto w-full text-center lg:flex justify-between">
-          <div className="flex justify-center space-x-6 mb-4">
+        <div className="border-t border-emerald-600 pt-8 mt-auto w-full text-center lg:flex justify-between items-center">
+          <div className="flex justify-center space-x-6 mb-4 lg:mb-0">
             <a
               href="https://facebook.com"
               target="_blank"

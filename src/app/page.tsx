@@ -39,7 +39,7 @@ export default function HomePage() {
               disesuaikan, dikirim langsung ke seluruh penjuru Indonesia. Mulai
               hidup sehat Anda bersama kami!
             </p>
-            <Link href="/subscription">
+            <Link href="/login">
               <Button
                 size="lg"
                 className="bg-emerald-500 hover:bg-emerald-600 text-white text-lg lg:text-xl py-6 rounded-full shadow-lg cursor-pointer"

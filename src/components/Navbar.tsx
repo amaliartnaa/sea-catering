@@ -84,7 +84,7 @@ export default function Navbar() {
               {user ? (
                 <Button
                   onClick={() => setIsLogoutConfirmOpen(true)}
-                  className="cursor-pointer bg-red-600 hover:bg-red-700 text-white text-lg"
+                  className="cursor-pointer bg-red-600 hover:bg-red-700 text-white text-md"
                 >
                   Logout
                 </Button>
@@ -220,12 +220,13 @@ export default function Navbar() {
             <Button
               variant="outline"
               onClick={() => setIsLogoutConfirmOpen(false)}
+              className="cursor-pointer"
             >
               Batal
             </Button>
             <Button
               onClick={handleLogoutConfirm}
-              className="bg-red-600 hover:bg-red-700"
+              className="bg-red-600 hover:bg-red-700 cursor-pointer"
             >
               Ya, Logout
             </Button>
