@@ -6,7 +6,9 @@ import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
 import { Card, CardContent } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
-import { Testimonial } from "@/src/types";
+import { Testimonial } from "@/src/types/index";
+import { SAMPLE_TESTIMONIALS } from "@/src/lib/constants";
+import { FaArrowLeft, FaArrowRight } from "react-icons/fa";
 
 const RatingStars = ({
   rating,
@@ -42,36 +44,15 @@ export default function ContactPage() {
   const [reviewMessage, setReviewMessage] = useState("");
   const [rating, setRating] = useState(0);
   const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
-  const [testimonials, setTestimonials] = useState<Testimonial[]>([]);
-  const [loadingTestimonials, setLoadingTestimonials] = useState(true);
+  const [displayedTestimonials, setDisplayedTestimonials] = useState<
+    Testimonial[]
+  >([]);
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [isSubmissionSuccess, setIsSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const fetchTestimonials = async () => {
-      setLoadingTestimonials(true);
-      try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
-        );
-        if (response.ok) {
-          const data = await response.json();
-          setTestimonials(data);
-          if (data.length > 0) {
-            setCurrentTestimonialIndex(0);
-          }
-        } else {
-          console.error("Failed to fetch testimonials:", response.statusText);
-        }
-      } catch (error) {
-        console.error("Error fetching testimonials:", error);
-      } finally {
-        setLoadingTestimonials(false);
-      }
-    };
-
-    fetchTestimonials();
+    setDisplayedTestimonials(SAMPLE_TESTIMONIALS.slice(0, 5));
   }, []);
 
   const handleSubmitTestimonial = async (e: React.FormEvent) => {
@@ -85,17 +66,32 @@ export default function ContactPage() {
     setIsSubmitting(true);
     setSubmissionMessage("");
 
+    let csrfToken;
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/testimonials`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ customerName, reviewMessage, rating }),
-        },
+      const csrfResponse = await fetch(`/api/csrf-token`);
+      if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
+      const { csrfToken: fetchedCsrfToken } = await csrfResponse.json();
+      csrfToken = fetchedCsrfToken;
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+      setSubmissionMessage(
+        "Gagal mendapatkan token keamanan. Mohon coba lagi.",
       );
+      setIsSubmissionSuccess(false);
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/testimonials`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken,
+        },
+        credentials: "include",
+        body: JSON.stringify({ customerName, reviewMessage, rating }),
+      });
 
       if (response.ok) {
         const newTestimonial = await response.json();
@@ -103,11 +99,7 @@ export default function ContactPage() {
           newTestimonial.message || "Testimoni Anda berhasil dikirim!",
         );
         setIsSubmissionSuccess(true);
-        setTestimonials((prev: Testimonial[]) => [
-          newTestimonial.testimonial,
-          ...prev,
-        ]);
-        setCurrentTestimonialIndex(0);
+
         setCustomerName("");
         setReviewMessage("");
         setRating(0);
@@ -128,21 +120,22 @@ export default function ContactPage() {
   };
 
   const nextTestimonial = () => {
-    if (testimonials.length === 0) return;
+    if (displayedTestimonials.length === 0) return;
     setCurrentTestimonialIndex(
-      (prevIndex) => (prevIndex + 1) % testimonials.length,
+      (prevIndex) => (prevIndex + 1) % displayedTestimonials.length,
     );
   };
 
   const prevTestimonial = () => {
-    if (testimonials.length === 0) return;
+    if (displayedTestimonials.length === 0) return;
     setCurrentTestimonialIndex(
       (prevIndex) =>
-        (prevIndex - 1 + testimonials.length) % testimonials.length,
+        (prevIndex - 1 + displayedTestimonials.length) %
+        displayedTestimonials.length,
     );
   };
 
-  const currentTestimonial = testimonials[currentTestimonialIndex];
+  const currentTestimonial = displayedTestimonials[currentTestimonialIndex];
 
   return (
     <div className="container mx-auto p-8 py-12">
@@ -211,7 +204,7 @@ export default function ContactPage() {
           <div className="text-center">
             <Button
               type="submit"
-              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-lg py-3 px-8 rounded-full"
+              className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-lg py-3 px-8 rounded-full cursor-pointer"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Mengirim..." : "Kirim Testimoni"}
@@ -224,11 +217,11 @@ export default function ContactPage() {
         <h2 className="text-4xl font-bold text-emerald-700 mb-8 text-center">
           Apa Kata Pelanggan Kami
         </h2>
-        {loadingTestimonials ? (
+        {displayedTestimonials.length === 0 ? (
           <p className="text-center text-lg text-gray-600">
-            Memuat testimoni...
+            Belum ada testimoni. Jadilah yang pertama!
           </p>
-        ) : testimonials.length > 0 ? (
+        ) : (
           <Card className="max-w-2xl mx-auto bg-white shadow-md p-6 text-center">
             <CardContent className="flex flex-col items-center">
               <p className="text-2xl italic text-gray-800 mb-4 leading-relaxed">
@@ -240,31 +233,28 @@ export default function ContactPage() {
               <RatingStars rating={currentTestimonial?.rating || 0} />
             </CardContent>
           </Card>
-        ) : (
-          <p className="text-center text-lg text-gray-600">
-            Belum ada testimoni. Jadilah yang pertama!
-          </p>
         )}
-        {testimonials.length > 1 && (
+        {displayedTestimonials.length > 1 && (
           <div className="flex justify-between items-center mt-8">
             <Button
               variant="outline"
               size="icon"
               onClick={prevTestimonial}
-              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100"
+              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100 cursor-pointer"
             >
-              &#8592;
+              <FaArrowLeft />
             </Button>
             <p className="text-lg text-gray-600">
-              Testimoni {currentTestimonialIndex + 1} dari {testimonials.length}
+              Testimoni {currentTestimonialIndex + 1} dari{" "}
+              {displayedTestimonials.length}
             </p>
             <Button
               variant="outline"
               size="icon"
               onClick={nextTestimonial}
-              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100"
+              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100 cursor-pointer"
             >
-              &#8594;
+              <FaArrowRight />
             </Button>
           </div>
         )}

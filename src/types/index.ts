@@ -12,4 +12,5 @@ export type Testimonial = {
   customerName: string;
   reviewMessage: string;
   rating: number;
+  createdAt?: string;
 };
