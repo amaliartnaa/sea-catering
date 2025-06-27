@@ -15,7 +15,7 @@ import ResumeSubscriptionDialog from "@/src/components/dashboard-user/ResumeSubs
 import SubscriptionControls from "@/src/components/dashboard-user/SubscriptionControls";
 
 export default function UserDashboardPage() {
-  const { isLoading, isAuthenticated, logout } = useAuth();
+  const { user, isLoading, isAuthenticated, logout } = useAuth();
   const router = useRouter();
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
@@ -283,11 +283,43 @@ export default function UserDashboardPage() {
     );
   }
 
+  const dashboardTitle = user?.fullName
+    ? `Halo, ${user.fullName}!`
+    : "Dashboard Pengguna";
+
+  let welcomeMessage = "Selamat datang di dashboard Anda.";
+  if (!loadingSubscriptions && subscriptions.length > 0) {
+    const activeSubs = subscriptions.filter(
+      (s) => s.status === "active",
+    ).length;
+    const pausedSubs = subscriptions.filter(
+      (s) => s.status === "paused",
+    ).length;
+
+    if (activeSubs > 0) {
+      welcomeMessage = `Anda memiliki ${activeSubs} langganan aktif.`;
+      if (pausedSubs > 0) {
+        welcomeMessage += ` (${pausedSubs} dijeda).`;
+      }
+    } else if (pausedSubs > 0) {
+      welcomeMessage = `Anda memiliki ${pausedSubs} langganan dijeda.`;
+    } else if (subscriptions.length > 0) {
+      welcomeMessage = `Anda memiliki ${subscriptions.length} langganan, namun saat ini tidak ada yang aktif.`;
+    } else {
+      welcomeMessage =
+        "Anda belum memiliki langganan. Mulai hidup sehat bersama kami!";
+    }
+  } else if (!loadingSubscriptions && subscriptions.length === 0) {
+    welcomeMessage =
+      "Anda belum memiliki langganan. Mulai hidup sehat bersama kami!";
+  }
+
   return (
     <div className="container mx-auto p-8 py-12">
       <h1 className="text-5xl font-extrabold text-center text-emerald-800 mb-12">
-        Dashboard Pengguna
+        {dashboardTitle}
       </h1>
+      <p className="text-xl text-center text-gray-600 mb-8">{welcomeMessage}</p>
 
       {dashboardMessage && (
         <div

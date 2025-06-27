@@ -50,15 +50,18 @@ export default function MenuPage() {
             className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
             {plan.image && (
-              <div className="relative h-48 bg-white">
-                <Image
-                  src={plan.image}
-                  alt={plan.name}
-                  fill
-                  style={{ objectFit: "cover" }}
-                  priority
-                  className="rounded-lg"
-                />
+              <div className="relative h-48 px-6">
+                <div className="w-full h-full rounded-lg overflow-hidden relative">
+                  <Image
+                    src={plan.image}
+                    alt={plan.name}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    style={{ objectFit: "cover" }}
+                    priority
+                    className="object-cover"
+                  />
+                </div>
               </div>
             )}
             <CardHeader className="flex-grow">
