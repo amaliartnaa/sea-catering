@@ -16,7 +16,6 @@ import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 import { cn } from "@/src/lib/utils";
 import { useAuth } from "@/src/context/AuthContext";
-import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -26,6 +25,14 @@ import {
   DialogTitle,
 } from "@/src/components/ui/dialog";
 import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import Link from "next/link";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner";
 type DeliveryDay =
@@ -54,13 +61,6 @@ export default function SubscriptionPage() {
     useState<boolean>(false);
 
   const { isLoading, isAuthenticated } = useAuth();
-  const router = useRouter();
-
-  useEffect(() => {
-    if (!isLoading && !isAuthenticated) {
-      router.push("/login?redirect_from=/subscription");
-    }
-  }, [isAuthenticated, isLoading, router]);
 
   useEffect(() => {
     const selectedPlan = MEAL_PLANS.find((plan) => plan.id === selectedPlanId);
@@ -137,6 +137,7 @@ export default function SubscriptionPage() {
           "Content-Type": "application/json",
           "CSRF-Token": csrfToken,
         },
+        credentials: "include",
         body: JSON.stringify(formData),
       });
 
@@ -144,10 +145,10 @@ export default function SubscriptionPage() {
         toast.success(
           "Langganan berhasil dibuat! Silakan lihat di dashboard Anda untuk detail lebih lanjut.",
           {
-            // description: "Pesanan Anda sedang diproses. Terima kasih!",
             duration: 5000,
           },
         );
+        // Reset form fields
         setCustomerName("");
         setPhoneNumber("");
         setSelectedPlanId("");
@@ -193,14 +194,7 @@ export default function SubscriptionPage() {
     allergies,
   ]);
 
-  if (isLoading || !isAuthenticated) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-gray-50 text-center text-lg text-gray-700">
-        <p>Memuat atau mengarahkan ke halaman login...</p>
-      </div>
-    );
-  }
-
+  // Constants for meal types and delivery days
   const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
   const allDeliveryDays: DeliveryDay[] = [
     "Monday",
@@ -277,6 +271,54 @@ export default function SubscriptionPage() {
   };
 
   const currentPlan = MEAL_PLANS.find((plan) => plan.id === selectedPlanId);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 text-center text-lg text-gray-700">
+        <p>Memuat status autentikasi...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md text-center shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold text-emerald-800">
+              Akses Berlangganan
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Nikmati kemudahan kustomisasi dan pengiriman makanan sehat. Untuk
+              memulai langganan, Anda perlu login atau mendaftar terlebih
+              dahulu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-4">
+              <Link href="/login">
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-lg py-3 cursor-pointer">
+                  Login Sekarang
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button
+                  variant="outline"
+                  className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-lg py-3 cursor-pointer"
+                >
+                  Daftar Akun Baru
+                </Button>
+              </Link>
+            </div>
+
+            <p className="text-sm text-gray-500 mt-4">
+              Sudah memiliki akun? Cukup login untuk melanjutkan!
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-8 py-12">

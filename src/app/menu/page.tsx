@@ -79,7 +79,7 @@ export default function MenuPage() {
             </CardContent>
             <CardFooter>
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
                 onClick={() => openModal(plan)}
               >
                 Lihat Detail
@@ -119,7 +119,7 @@ export default function MenuPage() {
               <Button
                 variant="outline"
                 onClick={closeModal}
-                className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
               >
                 Tutup
               </Button>

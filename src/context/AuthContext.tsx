@@ -5,10 +5,10 @@ import React, {
   useContext,
   useState,
   useEffect,
-  ReactNode,
   useCallback,
 } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
+import Cookies from "js-cookie";
 
 interface User {
   userId: string;
@@ -26,12 +26,12 @@ interface AuthContextType {
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export const AuthProvider = ({ children }: { children: ReactNode }) => {
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
+  const pathname = usePathname();
 
   const fetchUser = useCallback(async () => {
     setIsLoading(true);
@@ -45,8 +45,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
       const contentType = response.headers.get("content-type") || "";
       if (!response.ok) {
+        if (response.status === 401 || response.status === 403) {
+          Cookies.remove("token", { path: "/" });
+        }
         const errorText = await response.text();
-        console.error("Server error:", errorText);
+        console.error("Server error during fetchUser:", errorText);
         throw new Error("Session invalid");
       }
 
@@ -63,7 +66,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       console.error("Failed to fetch user data or session invalid:", error);
       setUser(null);
       setIsAuthenticated(false);
-      router.push("/login");
     } finally {
       setIsLoading(false);
     }
@@ -72,6 +74,59 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  useEffect(() => {
+    const protectedPaths = ["/dashboard", "/admin"];
+    const authOnlyPaths = ["/login", "/register"];
+
+    const currentPath = pathname;
+
+    const isProtectedPath = protectedPaths.some((path) =>
+      currentPath.startsWith(path),
+    );
+    const isAuthOnlyPath = authOnlyPaths.some((path) =>
+      currentPath.startsWith(path),
+    );
+
+    if (!isLoading) {
+      if (isProtectedPath && !isAuthenticated) {
+        if (currentPath !== "/login") {
+          console.log(
+            `[AuthContext] Redirecting from protected path ${currentPath} to /login (not authenticated)`,
+          );
+          router.push(`/login?redirect_from=${currentPath}`);
+        }
+      } else if (isAuthOnlyPath && isAuthenticated) {
+        console.log(
+          `[AuthContext] Authenticated on auth-only path ${currentPath}. User role: ${user?.role}`,
+        );
+        if (user?.role === "admin") {
+          if (currentPath !== "/admin/dashboard") {
+            console.log("[AuthContext] Redirecting admin to /admin/dashboard");
+            router.push("/admin/dashboard");
+          } else {
+            console.log(
+              "[AuthContext] Admin already on /admin/dashboard. No redirect.",
+            );
+          }
+        } else {
+          // Pengguna biasa
+          if (currentPath !== "/dashboard") {
+            console.log("[AuthContext] Redirecting regular user to /dashboard");
+            router.push("/dashboard");
+          } else {
+            console.log(
+              "[AuthContext] Regular user already on /dashboard. No redirect.",
+            );
+          }
+        }
+      }
+    } else {
+      console.log(
+        "[AuthContext] Still loading user data. No redirect decision yet.",
+      );
+    }
+  }, [isAuthenticated, isLoading, pathname, router, user]);
 
   const login = (newUser: User) => {
     setUser(newUser);
@@ -82,7 +137,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     setUser(null);
     setIsAuthenticated(false);
-
     try {
       await fetch("/api/auth/logout", {
         method: "POST",
