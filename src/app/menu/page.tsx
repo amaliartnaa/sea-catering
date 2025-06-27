@@ -50,14 +50,18 @@ export default function MenuPage() {
             className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300"
           >
             {plan.image && (
-              <div className="relative w-full h-48 bg-gray-100">
-                <Image
-                  src={plan.image}
-                  alt={plan.name}
-                  fill
-                  style={{ objectFit: "cover" }}
-                  className="rounded-t-lg"
-                />
+              <div className="relative h-48 px-6">
+                <div className="w-full h-full rounded-lg overflow-hidden relative">
+                  <Image
+                    src={plan.image}
+                    alt={plan.name}
+                    fill
+                    sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                    style={{ objectFit: "cover" }}
+                    priority
+                    className="object-cover"
+                  />
+                </div>
               </div>
             )}
             <CardHeader className="flex-grow">
@@ -78,7 +82,7 @@ export default function MenuPage() {
             </CardContent>
             <CardFooter>
               <Button
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
+                className="w-full bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
                 onClick={() => openModal(plan)}
               >
                 Lihat Detail
@@ -118,7 +122,7 @@ export default function MenuPage() {
               <Button
                 variant="outline"
                 onClick={closeModal}
-                className="border-gray-300 text-gray-700 hover:bg-gray-100"
+                className="border-gray-300 text-gray-700 hover:bg-gray-100 cursor-pointer"
               >
                 Tutup
               </Button>

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { MEAL_PLANS } from "@/src/lib/constants";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
@@ -15,6 +15,24 @@ import { Checkbox } from "@/src/components/ui/checkbox";
 import { Button } from "@/src/components/ui/button";
 import { Textarea } from "@/src/components/ui/textarea";
 import { cn } from "@/src/lib/utils";
+import { useAuth } from "@/src/context/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/ui/dialog";
+import { toast } from "sonner";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/src/components/ui/card";
+import Link from "next/link";
 
 type MealType = "Breakfast" | "Lunch" | "Dinner";
 type DeliveryDay =
@@ -37,17 +55,12 @@ export default function SubscriptionPage() {
   const [allergies, setAllergies] = useState<string>("");
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] =
+    useState<boolean>(false);
 
-  const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
-  const allDeliveryDays: DeliveryDay[] = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
+  const { isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
     const selectedPlan = MEAL_PLANS.find((plan) => plan.id === selectedPlanId);
@@ -83,26 +96,28 @@ export default function SubscriptionPage() {
     selectedDeliveryDays,
   ]);
 
-  const handleMealTypeChange = (mealType: MealType, checked: boolean) => {
-    if (checked) {
-      setSelectedMealTypes((prev) => [...prev, mealType]);
-    } else {
-      setSelectedMealTypes((prev) => prev.filter((m) => m !== mealType));
-    }
-  };
+  const proceedSubscription = useCallback(async () => {
+    setErrors({});
+    setLoading(true);
+    setIsConfirmDialogOpen(false);
 
-  const handleDeliveryDayChange = (day: DeliveryDay, checked: boolean) => {
-    if (checked) {
-      setSelectedDeliveryDays((prev) => [...prev, day]);
-    } else {
-      setSelectedDeliveryDays((prev) => prev.filter((d) => d !== day));
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isFormValid) {
-      alert("Harap lengkapi semua kolom yang wajib diisi (*).");
+    let csrfToken;
+    try {
+      const csrfResponse = await fetch("/api/csrf-token");
+      if (!csrfResponse.ok) {
+        throw new Error(
+          "Failed to fetch CSRF token: HTTP error " + csrfResponse.status,
+        );
+      }
+      const data = await csrfResponse.json();
+      if (!data.csrfToken) {
+        throw new Error("CSRF token not found in response");
+      }
+      csrfToken = data.csrfToken;
+    } catch (error) {
+      console.error("Error fetching CSRF token:", error);
+      toast.error("Gagal mendapatkan token keamanan. Mohon coba lagi.");
+      setLoading(false);
       return;
     }
 
@@ -113,34 +128,209 @@ export default function SubscriptionPage() {
       mealTypes: selectedMealTypes,
       deliveryDays: selectedDeliveryDays,
       allergies: allergies.trim() === "" ? null : allergies,
-      totalPrice,
     };
 
-    console.log("Data Langganan yang akan dikirim:", formData);
-    alert(
-      "Formulir langganan berhasil disubmit! (Data masih tercetak di konsol. Integrasi backend akan dilakukan di langkah selanjutnya.)",
-    );
+    try {
+      const response = await fetch("/api/subscriptions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "CSRF-Token": csrfToken,
+        },
+        credentials: "include",
+        body: JSON.stringify(formData),
+      });
 
-    setCustomerName("");
-    setPhoneNumber("");
-    setSelectedPlanId("");
-    setSelectedMealTypes([]);
-    setSelectedDeliveryDays([]);
-    setAllergies("");
+      if (response.ok) {
+        toast.success(
+          "Langganan berhasil dibuat! Silakan lihat di dashboard Anda untuk detail lebih lanjut.",
+          {
+            duration: 5000,
+          },
+        );
+        // Reset form fields
+        setCustomerName("");
+        setPhoneNumber("");
+        setSelectedPlanId("");
+        setSelectedMealTypes([]);
+        setSelectedDeliveryDays([]);
+        setAllergies("");
+        setTotalPrice(0);
+      } else {
+        const errorData = await response.json();
+        let errorMessage = "Gagal berlangganan. Mohon coba lagi.";
+        if (response.status === 401 || response.status === 403) {
+          errorMessage =
+            "Sesi Anda telah berakhir atau tidak memiliki izin. Silakan login kembali.";
+        } else if (response.status === 400 && errorData.errors) {
+          const newErrors: Record<string, string> = {};
+          errorData.errors.forEach((err: { path: string; message: string }) => {
+            newErrors[err.path] = err.message;
+          });
+          setErrors(newErrors);
+          errorMessage =
+            "Terdapat kesalahan pada input Anda. Silakan periksa kembali.";
+        } else {
+          errorMessage =
+            errorData.message || "Gagal berlangganan. Mohon coba lagi.";
+        }
+        toast.error("Gagal Berlangganan!", {
+          description: errorMessage,
+          duration: 5000,
+        });
+      }
+    } catch (error) {
+      console.error("Network or server error:", error);
+      toast.error("Terjadi masalah koneksi. Mohon coba lagi.");
+    } finally {
+      setLoading(false);
+    }
+  }, [
+    customerName,
+    phoneNumber,
+    selectedPlanId,
+    selectedMealTypes,
+    selectedDeliveryDays,
+    allergies,
+  ]);
+
+  // Constants for meal types and delivery days
+  const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
+  const allDeliveryDays: DeliveryDay[] = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
+    const { id, value } = e.target;
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      delete newErrors[id];
+      return newErrors;
+    });
+
+    if (id === "customerName") {
+      setCustomerName(value);
+    } else if (id === "phoneNumber") {
+      setPhoneNumber(value);
+    } else if (id === "allergies") {
+      setAllergies(value);
+    }
   };
+
+  const handleMealTypeChange = (mealType: MealType, checked: boolean) => {
+    setSelectedMealTypes((prev) =>
+      checked ? [...prev, mealType] : prev.filter((m) => m !== mealType),
+    );
+    setErrors((prev) => {
+      const rest = { ...prev };
+      delete rest.mealTypes;
+      return rest;
+    });
+  };
+
+  const handleDeliveryDayChange = (day: DeliveryDay, checked: boolean) => {
+    setSelectedDeliveryDays((prev) =>
+      checked ? [...prev, day] : prev.filter((d) => d !== day),
+    );
+    setErrors((prev) => {
+      const rest = { ...prev };
+      delete rest.deliveryDays;
+      return rest;
+    });
+  };
+
+  const handlePlanSelectChange = (value: string) => {
+    setSelectedPlanId(value);
+    setErrors((prev) => {
+      const rest = { ...prev };
+      delete rest.planId;
+      return rest;
+    });
+  };
+
+  const handlePreSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrors({});
+
+    if (!isFormValid) {
+      toast.error("Validasi Gagal!", {
+        description: "Harap lengkapi semua kolom yang wajib diisi (*).",
+        duration: 3000,
+      });
+      return;
+    }
+    setIsConfirmDialogOpen(true);
+  };
+
+  const currentPlan = MEAL_PLANS.find((plan) => plan.id === selectedPlanId);
+
+  if (isLoading) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 text-center text-lg text-gray-700">
+        <p>Memuat status autentikasi...</p>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50 p-4">
+        <Card className="w-full max-w-md text-center shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-3xl font-bold text-emerald-800">
+              Akses Berlangganan
+            </CardTitle>
+            <CardDescription className="text-gray-600">
+              Nikmati kemudahan kustomisasi dan pengiriman makanan sehat. Untuk
+              memulai langganan, Anda perlu login atau mendaftar terlebih
+              dahulu.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex flex-col gap-4">
+              <Link href="/login">
+                <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white text-md py-3 cursor-pointer">
+                  Login Sekarang
+                </Button>
+              </Link>
+              <Link href="/register">
+                <Button
+                  variant="outline"
+                  className="w-full border-emerald-600 text-emerald-600 hover:bg-emerald-50 text-md py-3 cursor-pointer"
+                >
+                  Daftar Akun Baru
+                </Button>
+              </Link>
+            </div>
+
+            <p className="text-sm text-gray-500 mt-4">
+              Sudah memiliki akun? Cukup login untuk melanjutkan!
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-8 py-12">
-      <h1 className="text-5xl font-extrabold text-center text-emerald-800 mb-12">
+      <h1 className="text-3xl lg:text-5xl font-extrabold text-center text-emerald-800 mb-12">
         Berlangganan Paket Makanan Sehat
       </h1>
 
       <form
-        onSubmit={handleSubmit}
+        onSubmit={handlePreSubmit}
         className="bg-white p-10 rounded-xl shadow-lg border border-gray-200 max-w-3xl mx-auto space-y-8"
       >
-        {/* Nama Lengkap */}
-        <div className="grid w-full items-center gap-1.5">
+        <div className="grid w-full items-center gap-2">
           <Label htmlFor="customerName">
             Nama Lengkap <span className="text-red-500">*</span>
           </Label>
@@ -148,13 +338,18 @@ export default function SubscriptionPage() {
             type="text"
             id="customerName"
             placeholder="Masukkan nama lengkap Anda"
+            className="text-sm placeholder:text-sm"
             value={customerName}
-            onChange={(e) => setCustomerName(e.target.value)}
+            onChange={handleChange}
             required
+            aria-invalid={errors.customerName ? "true" : "false"}
           />
+          {errors.customerName && (
+            <p className="text-red-500 text-sm mt-1">{errors.customerName}</p>
+          )}
         </div>
 
-        <div className="grid w-full items-center gap-1.5">
+        <div className="grid w-full items-center gap-2">
           <Label htmlFor="phoneNumber">
             Nomor Telepon Aktif <span className="text-red-500">*</span>
           </Label>
@@ -162,24 +357,30 @@ export default function SubscriptionPage() {
             type="tel"
             id="phoneNumber"
             placeholder="Contoh: 081234567890"
+            className="text-sm placeholder:text-sm"
             value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value)}
-            pattern="[0-9]{10,13}"
-            title="Nomor telepon harus berupa angka, antara 10 sampai 13 digit."
+            onChange={handleChange}
             required
+            aria-invalid={errors.phoneNumber ? "true" : "false"}
           />
+          {errors.phoneNumber && (
+            <p className="text-red-500 text-sm mt-1">{errors.phoneNumber}</p>
+          )}
         </div>
 
-        <div className="grid w-full items-center gap-1.5">
+        <div className="grid w-full items-center gap-2">
           <Label htmlFor="planSelection">
             Pilih Paket <span className="text-red-500">*</span>
           </Label>
           <Select
             value={selectedPlanId}
-            onValueChange={setSelectedPlanId}
+            onValueChange={handlePlanSelectChange}
             required
           >
-            <SelectTrigger id="planSelection">
+            <SelectTrigger
+              id="planSelection"
+              aria-invalid={errors.planId ? "true" : "false"}
+            >
               <SelectValue placeholder="-- Pilih Paket Makanan --" />
             </SelectTrigger>
             <SelectContent>
@@ -190,6 +391,9 @@ export default function SubscriptionPage() {
               ))}
             </SelectContent>
           </Select>
+          {errors.planId && (
+            <p className="text-red-500 text-sm mt-1">{errors.planId}</p>
+          )}
         </div>
 
         <div className="grid w-full gap-2">
@@ -216,6 +420,9 @@ export default function SubscriptionPage() {
             <p className="text-red-500 text-sm mt-1">
               Setidaknya satu jenis makanan harus dipilih.
             </p>
+          )}
+          {errors.mealTypes && (
+            <p className="text-red-500 text-sm mt-1">{errors.mealTypes}</p>
           )}
         </div>
 
@@ -247,18 +454,26 @@ export default function SubscriptionPage() {
               Setidaknya satu hari pengiriman harus dipilih.
             </p>
           )}
+          {errors.deliveryDays && (
+            <p className="text-red-500 text-sm mt-1">{errors.deliveryDays}</p>
+          )}
         </div>
 
-        <div className="grid w-full gap-1.5">
+        <div className="grid w-full gap-2">
           <Label htmlFor="allergies">
             Alergi / Pembatasan Diet Lainnya (Opsional)
           </Label>
           <Textarea
             id="allergies"
+            className="text-sm placeholder:text-sm"
             placeholder="Contoh: Alergi kacang, tidak suka pedas, gluten-free..."
             value={allergies}
-            onChange={(e) => setAllergies(e.target.value)}
+            onChange={handleChange}
+            aria-invalid={errors.allergies ? "true" : "false"}
           />
+          {errors.allergies && (
+            <p className="text-red-500 text-sm mt-1">{errors.allergies}</p>
+          )}
         </div>
 
         <div className="bg-emerald-50 p-6 rounded-lg text-center border border-emerald-200">
@@ -277,15 +492,75 @@ export default function SubscriptionPage() {
           <Button
             type="submit"
             className={cn(
-              "w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-lg py-3 px-10 rounded-full",
-              !isFormValid && "opacity-60 cursor-not-allowed",
+              "w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-md lg:text-lg py-3 px-10 rounded-full cursor-pointer",
+              (!isFormValid || loading) && "opacity-60 cursor-not-allowed",
             )}
-            disabled={!isFormValid}
+            disabled={!isFormValid || loading}
           >
-            Berlangganan Sekarang
+            {loading ? "Memproses..." : "Berlangganan Sekarang"}
           </Button>
         </div>
       </form>
+
+      <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Berlangganan</DialogTitle>
+            <DialogDescription>
+              Mohon periksa kembali detail langganan Anda sebelum melanjutkan.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-3 text-sm">
+            <p>
+              <span className="font-semibold">Nama Pelanggan:</span>{" "}
+              {customerName}
+            </p>
+            <p>
+              <span className="font-semibold">Nomor Telepon:</span>{" "}
+              {phoneNumber}
+            </p>
+            <p>
+              <span className="font-semibold">Paket Terpilih:</span>{" "}
+              {currentPlan?.name || "N/A"}
+            </p>
+            <p>
+              <span className="font-semibold">Jenis Makanan:</span>{" "}
+              {selectedMealTypes.join(", ") || "Belum dipilih"}
+            </p>
+            <p>
+              <span className="font-semibold">Hari Pengiriman:</span>{" "}
+              {selectedDeliveryDays.join(", ") || "Belum dipilih"}
+            </p>
+            {allergies && (
+              <p>
+                <span className="font-semibold">Alergi/Diet:</span> {allergies}
+              </p>
+            )}
+            <p className="text-lg font-bold text-emerald-800 pt-2">
+              Total Pembayaran: Rp{totalPrice.toLocaleString("id-ID")}
+            </p>
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsConfirmDialogOpen(false)}
+              disabled={loading}
+            >
+              Masih Pilih Lagi
+            </Button>
+            <Button
+              type="button"
+              onClick={proceedSubscription}
+              disabled={loading}
+              className="bg-emerald-600 hover:bg-emerald-700"
+            >
+              {loading ? "Memproses..." : "Ya, Saya Yakin"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

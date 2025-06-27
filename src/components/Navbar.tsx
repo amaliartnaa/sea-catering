@@ -4,146 +4,150 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/src/components/ui/sheet";
 import { useAuth } from "@/src/context/AuthContext";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/ui/dialog";
+
+import {
+  FaHome,
+  FaUtensils,
+  FaClipboardList,
+  FaEnvelope,
+  FaTachometerAlt,
+  FaUserCog,
+} from "react-icons/fa";
+import { IconType } from "react-icons";
+import { FiLogIn, FiLogOut, FiUserPlus } from "react-icons/fi";
+import { RxHamburgerMenu } from "react-icons/rx";
+
+interface NavLinkItem {
+  name: string;
+  href: string;
+  icon?: IconType;
+}
 
 export default function Navbar() {
   const pathname = usePathname();
   const [isSheetOpen, setIsSheetOpen] = useState(false);
+  const [isLogoutConfirmOpen, setIsLogoutConfirmOpen] = useState(false);
   const { user, logout, isLoading } = useAuth();
 
-  const navLinks = [
-    { name: "Home", href: "/" },
-    { name: "Menu / Meal Plans", href: "/menu" },
-    { name: "Subscription", href: "/subscription" },
-    { name: "Contact Us", href: "/contact" },
+  const commonLinks: NavLinkItem[] = [
+    { name: "Menu / Meal Plans", href: "/menu", icon: FaUtensils },
+    { name: "Subscription", href: "/subscription", icon: FaClipboardList },
+    { name: "Contact Us", href: "/contact", icon: FaEnvelope },
   ];
+
+  const loggedOutLinks: NavLinkItem[] = [
+    { name: "Home", href: "/", icon: FaHome },
+    ...commonLinks,
+  ];
+
+  let loggedInLinksBasedOnRole: NavLinkItem[];
+  if (user?.role === "admin") {
+    loggedInLinksBasedOnRole = [
+      { name: "Admin Dashboard", href: "/admin/dashboard", icon: FaUserCog },
+    ];
+  } else {
+    loggedInLinksBasedOnRole = [
+      { name: "Dashboard", href: "/dashboard", icon: FaTachometerAlt },
+      ...commonLinks,
+    ];
+  }
+
+  const displayNavLinks = user ? loggedInLinksBasedOnRole : loggedOutLinks;
+
+  const handleLogoutConfirm = () => {
+    logout();
+    setIsLogoutConfirmOpen(false);
+    setIsSheetOpen(false);
+  };
 
   return (
     <nav className="bg-emerald-800 p-4 shadow-lg sticky top-0 z-50">
-      <div className="container mx-auto flex justify-between items-center">
-        <Link href="/" className="text-white text-3xl font-bold tracking-wide">
-          SEA Catering
-        </Link>
-
-        <div className="hidden md:flex items-center space-x-6">
-          {navLinks.map((link) => (
-            <Link key={link.name} href={link.href}>
-              <Button
-                variant="ghost"
-                className={`text-lg transition-colors duration-200 ${
-                  pathname === link.href
-                    ? "text-white border-b-2 border-white"
-                    : "text-gray-300 hover:border-b-2 hover:border-gray-300"
-                }`}
-              >
-                {link.name}
-              </Button>
-            </Link>
-          ))}
-          {!isLoading &&
-            (user ? (
-              <>
-                <Link
-                  href="/dashboard"
-                  className="text-gray-300 hover:text-white text-lg"
-                >
-                  <Button variant="ghost">Dashboard</Button>
-                </Link>
-                <Button
-                  onClick={logout}
-                  className="bg-red-600 hover:bg-red-700 text-white text-lg"
-                >
-                  Logout
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link
-                  href="/login"
-                  className="text-gray-300 hover:text-white text-lg"
-                >
-                  <Button variant="ghost">Login</Button>
-                </Link>
-              </>
-            ))}
-        </div>
-
-        <div className="md:hidden">
+      <div className="container mx-auto flex items-center justify-between">
+        <div className="lg:hidden">
           <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white">
-                <svg
-                  className="w-8 h-8"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M4 6h16M4 12h16m-7 6h7"
-                  ></path>
-                </svg>
-                <span className="sr-only">Toggle navigation menu</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="text-white hover:text-white hover:bg-emerald-800"
+              >
+                <RxHamburgerMenu className="!h-8 !w-8" />
               </Button>
             </SheetTrigger>
             <SheetContent
-              side="right"
-              className="w-[250px] sm:w-[300px] bg-emerald-800 text-white border-l border-emerald-700 p-6"
+              side="left"
+              className="w-[250px] sm:w-[300px] bg-white text-black border-r border-emerald-700 p-6 flex flex-col"
             >
-              <div className="flex flex-col space-y-4 pt-8">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    onClick={() => setIsSheetOpen(false)}
-                  >
-                    <Button
-                      variant="ghost"
-                      className={`w-full justify-start text-xl transition-colors duration-200 ${
-                        pathname === link.href
-                          ? "text-white bg-emerald-700"
-                          : "text-gray-300 hover:text-white hover:bg-emerald-700"
-                      }`}
-                    >
-                      {link.name}
-                    </Button>
-                  </Link>
-                ))}
-                {!isLoading &&
-                  (user ? (
-                    <>
+              <SheetHeader>
+                <SheetTitle className="text-2xl text-gray-800">
+                  SEA Catering Menu
+                </SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 flex-grow">
+                {isLoading ? (
+                  <div className="text-gray-600">Memuat...</div>
+                ) : (
+                  <>
+                    {displayNavLinks.map((link) => (
                       <Link
-                        href="/dashboard"
+                        key={link.name}
+                        href={link.href}
                         onClick={() => setIsSheetOpen(false)}
                       >
                         <Button
                           variant="ghost"
-                          className="w-full justify-start text-xl text-gray-300 hover:text-white hover:bg-emerald-700"
+                          className={`w-full justify-start text-md py-6 transition-colors duration-200 flex items-center gap-3 ${
+                            pathname === link.href
+                              ? "text-white bg-emerald-700 hover:bg-emerald-700"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
                         >
-                          Dashboard
+                          {link.icon && <link.icon className="h-5 w-5" />}
+                          {link.name}
                         </Button>
                       </Link>
-                      <Button
-                        onClick={() => {
-                          logout();
-                          setIsSheetOpen(false);
-                        }}
-                        className="w-full justify-start bg-red-600 hover:bg-red-700 text-white text-xl"
-                      >
-                        Logout
-                      </Button>
-                    </>
+                    ))}
+                  </>
+                )}
+              </div>
+
+              {!isLoading && (
+                <div className="mt-auto pt-4 border-t border-gray-200 space-y-4">
+                  {user ? (
+                    <Button
+                      onClick={() => {
+                        setIsLogoutConfirmOpen(true);
+                        setIsSheetOpen(false);
+                      }}
+                      className="w-full py-6 justify-start text-md bg-red-600 hover:bg-red-700 text-white flex items-center gap-3"
+                    >
+                      <FiLogOut className="h-5 w-5" />
+                      Logout
+                    </Button>
                   ) : (
-                    <>
+                    <div className="flex flex-col gap-4">
                       <Link href="/login" onClick={() => setIsSheetOpen(false)}>
                         <Button
                           variant="ghost"
-                          className="w-full justify-start text-xl text-gray-300 hover:text-white hover:bg-emerald-700"
+                          className="w-full justify-start text-md py-6 bg-emerald-600 hover:bg-emerald-600 text-white hover:text-white flex items-center gap-3"
                         >
+                          <FiLogIn className="h-5 w-5" />
                           Login
                         </Button>
                       </Link>
@@ -153,18 +157,106 @@ export default function Navbar() {
                       >
                         <Button
                           variant="outline"
-                          className="w-full justify-start text-xl text-white border-white hover:bg-white hover:text-emerald-800"
+                          className="w-full justify-start text-md border-emerald-800 bg-gray-100 py-6 text-emerald-800 hover:text-emerald-800 flex items-center gap-3"
                         >
+                          <FiUserPlus className="h-5 w-5" />
                           Register
                         </Button>
                       </Link>
-                    </>
-                  ))}
-              </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </SheetContent>
           </Sheet>
         </div>
+
+        <div className="flex-grow flex justify-center lg:justify-start">
+          <Link
+            href="/"
+            className="text-white text-3xl font-bold tracking-wide"
+          >
+            SEA Catering
+          </Link>
+        </div>
+
+        <div className="hidden lg:flex items-center space-x-6 flex-shrink-0">
+          {isLoading ? (
+            <div className="text-white">Memuat...</div>
+          ) : (
+            <>
+              {displayNavLinks.map((link) => (
+                <Link key={link.name} href={link.href}>
+                  <Button
+                    variant="ghost"
+                    className={`text-md transition-colors duration-200 cursor-pointer ${
+                      pathname === link.href
+                        ? " bg-white text-black"
+                        : "text-white"
+                    }`}
+                  >
+                    {link.name}
+                  </Button>
+                </Link>
+              ))}
+              {user ? (
+                <Button
+                  onClick={() => setIsLogoutConfirmOpen(true)}
+                  className="cursor-pointer bg-red-600 hover:bg-red-700 text-white text-md"
+                >
+                  Logout
+                </Button>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      className="text-white hover:text-white bg-emerald-800 hover:bg-emerald-800 text-md cursor-pointer"
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button
+                      variant="outline"
+                      className="text-emerald-800 bg-white text-md cursor-pointer"
+                    >
+                      Register
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </>
+          )}
+        </div>
       </div>
+
+      <Dialog open={isLogoutConfirmOpen} onOpenChange={setIsLogoutConfirmOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Logout</DialogTitle>
+            <DialogDescription>
+              Apakah Anda yakin ingin keluar dari akun Anda?
+            </DialogDescription>
+          </DialogHeader>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsLogoutConfirmOpen(false)}
+              className="cursor-pointer"
+            >
+              Batal
+            </Button>
+            <Button
+              onClick={handleLogoutConfirm}
+              className="bg-red-600 hover:bg-red-700 cursor-pointer"
+            >
+              Ya, Logout
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </nav>
   );
 }
