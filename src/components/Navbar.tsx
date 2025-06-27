@@ -4,7 +4,13 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/src/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/src/components/ui/sheet";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/src/components/ui/sheet";
 import { useAuth } from "@/src/context/AuthContext";
 import {
   Dialog,
@@ -29,13 +35,19 @@ export default function Navbar() {
 
   const loggedOutLinks = [{ name: "Home", href: "/" }, ...commonLinks];
 
-  const loggedInLinks = [
-    { name: "Home", href: "/" },
-    ...commonLinks,
-    { name: "Dashboard", href: "/dashboard" },
-  ];
+  let loggedInLinksBasedOnRole;
+  if (user?.role === "admin") {
+    loggedInLinksBasedOnRole = [
+      { name: "Admin Dashboard", href: "/admin/dashboard" },
+    ];
+  } else {
+    loggedInLinksBasedOnRole = [
+      { name: "Dashboard", href: "/dashboard" },
+      ...commonLinks,
+    ];
+  }
 
-  const displayNavLinks = user ? loggedInLinks : loggedOutLinks;
+  const displayNavLinks = user ? loggedInLinksBasedOnRole : loggedOutLinks;
 
   const handleLogoutConfirm = () => {
     logout();
@@ -51,48 +63,53 @@ export default function Navbar() {
         </Link>
 
         <div className="hidden lg:flex items-center space-x-6">
-          {displayNavLinks.map((link) => (
-            <Link key={link.name} href={link.href}>
-              <Button
-                variant="ghost"
-                className={`text-md transition-colors duration-200 cursor-pointer ${
-                  pathname === link.href ? " bg-white text-black" : "text-white"
-                }`}
-              >
-                {link.name}
-              </Button>
-            </Link>
-          ))}
-          {!isLoading &&
-            (user ? (
-              <>
+          {isLoading ? (
+            <div className="text-white">Memuat...</div>
+          ) : (
+            <>
+              {displayNavLinks.map((link) => (
+                <Link key={link.name} href={link.href}>
+                  <Button
+                    variant="ghost"
+                    className={`text-md transition-colors duration-200 cursor-pointer ${
+                      pathname === link.href
+                        ? " bg-white text-black"
+                        : "text-white"
+                    }`}
+                  >
+                    {link.name}
+                  </Button>
+                </Link>
+              ))}
+              {user ? (
                 <Button
                   onClick={() => setIsLogoutConfirmOpen(true)}
                   className="cursor-pointer bg-red-600 hover:bg-red-700 text-white text-lg"
                 >
                   Logout
                 </Button>
-              </>
-            ) : (
-              <>
-                <Link href="/login">
-                  <Button
-                    variant="outline"
-                    className="text-white hover:text-white bg-emerald-800 hover:bg-emerald-800 text-md cursor-pointer"
-                  >
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/register">
-                  <Button
-                    variant="outline"
-                    className="text-emerald-800 bg-white text-md cursor-pointer"
-                  >
-                    Register
-                  </Button>
-                </Link>
-              </>
-            ))}
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button
+                      variant="outline"
+                      className="text-white hover:text-white bg-emerald-800 hover:bg-emerald-800 text-md cursor-pointer"
+                    >
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button
+                      variant="outline"
+                      className="text-emerald-800 bg-white text-md cursor-pointer"
+                    >
+                      Register
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </>
+          )}
         </div>
 
         <div className="lg:hidden">
@@ -124,7 +141,10 @@ export default function Navbar() {
               side="right"
               className="w-[250px] sm:w-[300px] bg-white text-black border-l border-emerald-700 p-6 flex flex-col"
             >
-              <div className="flex flex-col space-y-4 pt-8 flex-grow">
+              <SheetHeader>
+                <SheetTitle className="text-2xl">SEA Catering Menu</SheetTitle>
+              </SheetHeader>
+              <div className="flex flex-col space-y-4 flex-grow">
                 {displayNavLinks.map((link) => (
                   <Link
                     key={link.name}

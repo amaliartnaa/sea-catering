@@ -3,20 +3,24 @@ import type { NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
   const token = request.cookies.get("token")?.value;
+  const currentPath = request.nextUrl.pathname;
 
-  const protectedPaths = ["/subscription", "/dashboard", "/admin"];
+  const protectedPaths = ["/dashboard", "/admin"];
+  const authOnlyPaths = ["/login", "/register"];
+
+  if (currentPath === "/subscription" && !token) {
+    return NextResponse.next();
+  }
 
   const isProtectedPath = protectedPaths.some((path) =>
-    request.nextUrl.pathname.startsWith(path),
+    currentPath.startsWith(path),
   );
-  const isAuthPath =
-    request.nextUrl.pathname.startsWith("/login") ||
-    request.nextUrl.pathname.startsWith("/register");
+  const isAuthPath = authOnlyPaths.some((path) => currentPath.startsWith(path));
 
   if (isProtectedPath && !token) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
-    url.searchParams.set("redirect_from", request.nextUrl.pathname);
+    url.searchParams.set("redirect_from", currentPath);
     return NextResponse.redirect(url);
   }
 

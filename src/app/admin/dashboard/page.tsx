@@ -14,6 +14,7 @@ import { cn } from "@/src/lib/utils";
 import { format } from "date-fns";
 import { useRouter } from "next/navigation";
 import React, { useCallback, useEffect, useState } from "react";
+import { FaRegCalendarAlt } from "react-icons/fa";
 import {
   Bar,
   BarChart,
@@ -168,12 +169,16 @@ export default function AdminDashboardPage() {
             >
               Tanggal Mulai:
             </Label>
-            <Input
-              type="date"
-              id="startDate"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-            />
+            <div className="relative w-full">
+              <Input
+                type="date"
+                id="startDate"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="w-full pr-10 appearance-none calendar-icon-none clickable-calendar"
+              />
+              <FaRegCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            </div>
           </div>
           <div>
             <Label
@@ -182,17 +187,21 @@ export default function AdminDashboardPage() {
             >
               Tanggal Akhir:
             </Label>
-            <Input
-              type="date"
-              id="endDate"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-            />
+            <div className="relative w-full">
+              <Input
+                type="date"
+                id="endDate"
+                value={endDate}
+                onChange={(e) => setEndDate(e.target.value)}
+                className="w-full pr-10 appearance-none calendar-icon-none clickable-calendar"
+              />
+              <FaRegCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
+            </div>
           </div>
           <Button
             onClick={fetchAdminMetrics}
             disabled={loadingMetrics}
-            className="bg-emerald-600 hover:bg-emerald-700"
+            className="bg-emerald-600 hover:bg-emerald-700 col-span-1 md:col-span-1 cursor-pointer"
           >
             {loadingMetrics ? "Memuat..." : "Terapkan filter"}
           </Button>
@@ -202,22 +211,22 @@ export default function AdminDashboardPage() {
       {loadingMetrics ? (
         <p className="text-center text-gray-600">Memuat metrik...</p>
       ) : metrics ? (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <Card className="shadow-lg">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+          <Card className="shadow-lg justify-between">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-emerald-800">
                 Langganan Baru
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-4xl font-extravold text-green-700">
+              <p className="text-4xl font-extrabold text-green-700">
                 {metrics.newSubscriptions}
               </p>
               <p className="text-gray-600">selama periode yang dipilih</p>
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg">
+          <Card className="shadow-lg justify-between">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-emerald-800">
                 Monthly Recurring Revenue (MRR)
@@ -233,7 +242,7 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg">
+          <Card className="shadow-lg justify-between">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-emerald-800">
                 Reaktivasi
@@ -247,7 +256,7 @@ export default function AdminDashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg">
+          <Card className="shadow-lg justify-between">
             <CardHeader>
               <CardTitle className="text-2xl font-bold text-emerald-800">
                 Total Langganan Aktif
