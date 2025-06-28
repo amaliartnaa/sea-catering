@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/src/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -47,7 +47,7 @@ const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
 };
 
 export async function PUT(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { id: string } },
 ) {
   try {
