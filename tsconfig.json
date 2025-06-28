@@ -29,7 +29,8 @@
     "**/*.tsx",
     ".next/types/**/*.ts",
     "next.config.mjs",
-    "prisma/seed.mjs"
+    "prisma/seed.mjs",
+    "prisma/client/index.d.ts"
   ],
   "exclude": ["node_modules"]
 }
