@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/src/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -46,15 +46,11 @@ const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
   }
 };
 
-export async function PUT(req: NextRequest) {
-  const id = req.nextUrl.pathname.split("/").at(-2);
-
-  if (!id) {
-    return NextResponse.json(
-      { message: "Invalid subscription ID" },
-      { status: 400 },
-    );
-  }
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } },
+) {
+  const { id } = params;
   try {
     await verifyCsrfToken(req);
 
