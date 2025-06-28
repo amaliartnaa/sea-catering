@@ -54,6 +54,13 @@ export async function PUT(
     ? context.params.id[0]
     : context.params.id;
 
+  if (!id) {
+    return NextResponse.json(
+      { message: "Invalid subscription ID" },
+      { status: 400 },
+    );
+  }
+
   try {
     await verifyCsrfToken(req);
 
