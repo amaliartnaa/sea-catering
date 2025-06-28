@@ -25,19 +25,22 @@ This project follows a **monorepo architecture** where the frontend and backend 
 
 ## 🛠️ Technologies Used
 
-- 🧭 **Next.js**: A React framework for building web applications, providing server-side rendering, API routes, and static site generation capabilities.
-- ⚛️ **React**: A JavaScript library for building user interfaces, enabling component-based UI development.
-- 📘 **TypeScript**: A typed superset of JavaScript that compiles to plain JavaScript, enhancing code quality and maintainability through static type checking.
-- 🎨 **Tailwind CSS**: A utility-first CSS framework for rapidly building custom designs directly in your HTML.
-- 🧩 **shadcn/ui**: A collection of beautiful and accessible UI components built with Radix UI and Tailwind CSS, offering ready-to-use UI primitives.
-- 🛠️ **Prisma ORM**: An open-source ORM (Object-Relational Mapper) that makes database access easy with type-safe queries, used to interact with PostgreSQL.
-- 🐘 **PostgreSQL (via Supabase)**: A powerful, open-source relational database system. Supabase provides a managed PostgreSQL instance, simplifying database hosting and management.
-- 🔐 **bcryptjs**: A library used for hashing passwords, ensuring user authentication is secure by storing encrypted passwords.
-- 🎟️ **jsonwebtoken (JWT)**: A standard for creating access tokens that assert claims (like user identity) in a secure way, used for user authentication sessions.
-- 🛡️ **csurf**: A middleware for Express.js (used in Next.js API Routes) that provides protection against Cross-Site Request Forgery (CSRF) attacks, enhancing application security.
-- 📊 **Recharts**: A composable charting library built with React and D3, used for rendering interactive data visualizations in the admin dashboard.
-- 🗓️ **date-fns**: A modern JavaScript date utility library that provides a comprehensive, yet simple and consistent toolset for manipulating dates.
-
+- 🧭 **Next.js 15 with App Router**: React framework for fast web apps, server-side rendering, and API routes.
+- ⚛️ **React**: JavaScript library for building user interfaces.
+- 📘 **TypeScript**: Typed JavaScript for better code quality and maintainability.
+- 🎨 **Tailwind CSS**: Utility-first CSS for rapid, custom styling.
+- 🧩 **shadcn/ui**: Accessible UI components built with Radix UI and Tailwind.
+- 🛠️ **Prisma ORM**: Type-safe ORM for database interaction with PostgreSQL.
+- 🐘 **PostgreSQL (via Supabase)**: Powerful relational database, managed and hosted by Supabase.
+- 🔐 **bcryptjs**: Library for secure password hashing.
+- 🎟️ **jsonwebtoken (JWT)**: Standard for secure, token-based user authentication.
+- 🛡️ **csurf**: Middleware for CSRF protection in API Routes.
+- 📊 **Recharts**: React charting library for data visualization.
+- 🗓️ **date-fns**: Modern JavaScript library for date manipulation.
+- 🐶 **Husky**: Git hooks manager for automating tasks like linting and formatting before commits.
+- ✨ **Prettier**: Code formatter for consistent code style
+- 🧹 **ESLint**: Pluggable linter for indentifying and reporting on patterns in JavaScript/TypScript code.
+- 🧪 **Zod**: TypeScript-first schema declaration and validation library
 ---
 
 ## 🍽️ Key Features
