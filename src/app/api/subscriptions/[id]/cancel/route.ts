@@ -46,10 +46,15 @@ const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
   }
 };
 
-export async function PUT(
-  req: NextRequest,
-  { params }: { params: { id: string } },
-) {
+export async function PUT(req: NextRequest) {
+  const id = req.nextUrl.pathname.split("/").at(-2);
+
+  if (!id) {
+    return NextResponse.json(
+      { message: "Invalid subscription ID" },
+      { status: 400 },
+    );
+  }
   try {
     await verifyCsrfToken(req);
 
@@ -60,8 +65,6 @@ export async function PUT(
         { status: 401 },
       );
     }
-
-    const { id } = params;
 
     const subscription = await prisma.subscription.findUnique({
       where: { id },
