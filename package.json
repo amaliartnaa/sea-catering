@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit --incremental false",
     "format": "prettier --write .",
-    "format:check": "prettier --check '**/*.{js,ts,tsx,json,css,md}'",
+    "format:check": "prettier --check '**/*.{js,ts,tsx,json,css}'",
     "prisma:migrate": "npx prisma migrate dev",
     "prisma:generate": "npx prisma generate",
     "db:seed": "ts-node --esm prisma/seed.mjs"
