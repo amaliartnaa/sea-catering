@@ -46,8 +46,17 @@ const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
 };
 export async function PUT(
   req: Request,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
+  const id = (await params).id;
+
+  if (!id) {
+    return NextResponse.json(
+      { message: "Invalid subscription ID" },
+      { status: 400 },
+    );
+  }
+
   try {
     await verifyCsrfToken(req);
 
@@ -59,7 +68,6 @@ export async function PUT(
       );
     }
 
-    const { id } = params;
     const { pauseStartDate, pauseEndDate } = await req.json();
 
     if (!pauseStartDate || !pauseEndDate) {
