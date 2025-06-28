@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import prisma from "@/src/lib/prisma";
 import jwt from "jsonwebtoken";
@@ -47,10 +47,13 @@ const getAuthenticatedUser = async (): Promise<AuthenticatedUser | null> => {
 };
 
 export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } },
+  req: NextRequest,
+  context: { params: { id: string | string[] } },
 ) {
-  const { id } = params;
+  const id = Array.isArray(context.params.id)
+    ? context.params.id[0]
+    : context.params.id;
+
   try {
     await verifyCsrfToken(req);
 
