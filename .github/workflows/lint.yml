@@ -27,13 +27,12 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
 
-      - name: 📥 Download deps
+      - name: 📥 Download deps (No cache)
         run: pnpm install --no-frozen-lockfile
 
       - name: 🛠️ Generate Prisma Client
-        run: npx prisma generate
+        run: npx prisma generate --schema prisma/schema.prisma 
 
       - name: 🔬 Lint
         run: pnpm run lint
