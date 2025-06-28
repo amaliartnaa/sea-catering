@@ -1,0 +1,64 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model MealPlan {
+  id          String        @id @default(uuid())
+  name        String        @unique
+  price       Int           
+  description String        
+  details     String?       
+  image       String?       
+  subscriptions Subscription[]
+}
+
+model Subscription {
+  id             String    @id @default(uuid())
+  customerName   String
+  phoneNumber    String
+  planId         String
+  plan           MealPlan  @relation(fields: [planId], references: [id])
+  mealTypes      String[]  
+  deliveryDays   String[]  
+  allergies      String?   
+  totalPrice     Float     
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  status         String    @default("active")
+  pauseStartDate DateTime?
+  pauseEndDate   DateTime?
+  userId         String?
+  user           User?     @relation(fields: [userId], references: [id])
+}
+
+model Testimonial {
+  id             String    @id @default(uuid())
+  customerName   String
+  reviewMessage  String
+  rating         Int       
+  createdAt      DateTime  @default(now())
+}
+
+model User {
+  id          String       @id @default(uuid())
+  fullName    String
+  email       String       @unique
+  password    String       
+  role        String       @default("user")
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  subscriptions Subscription[]
+}

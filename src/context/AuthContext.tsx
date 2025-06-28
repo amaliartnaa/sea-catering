@@ -36,12 +36,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchUser = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/auth/me`,
-        {
-          credentials: "include",
-        },
-      );
+      const response = await fetch(`/api/auth/me`, {
+        credentials: "include",
+      });
 
       const contentType = response.headers.get("content-type") || "";
       if (!response.ok) {

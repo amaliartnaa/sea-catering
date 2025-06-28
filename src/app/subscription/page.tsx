@@ -547,6 +547,7 @@ export default function SubscriptionPage() {
               variant="outline"
               onClick={() => setIsConfirmDialogOpen(false)}
               disabled={loading}
+              className="cursor-pointer"
             >
               Masih Pilih Lagi
             </Button>
@@ -554,7 +555,7 @@ export default function SubscriptionPage() {
               type="button"
               onClick={proceedSubscription}
               disabled={loading}
-              className="bg-emerald-600 hover:bg-emerald-700"
+              className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
             >
               {loading ? "Memproses..." : "Ya, Saya Yakin"}
             </Button>

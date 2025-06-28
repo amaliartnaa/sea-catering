@@ -65,7 +65,7 @@ export default function UserDashboardPage() {
       queryParams.append("sortOrder", sortByOrder);
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/me?${queryParams.toString()}`,
+        `/api/subscriptions/me?${queryParams.toString()}`,
         {
           credentials: "include",
         },
@@ -86,7 +86,7 @@ export default function UserDashboardPage() {
         }
       }
     } catch (error) {
-      console.error("[Frontend] Network or unexpected error:", error); // Catat error jaringan
+      console.error("[Frontend] Network or unexpected error:", error);
       setDashboardMessage("Terjadi masalah koneksi saat memuat langganan.");
       setIsDashboardSuccess(false);
     } finally {
@@ -111,28 +111,24 @@ export default function UserDashboardPage() {
       setPauseLoading(true);
       setConfirmPauseMessage("");
       try {
-        const csrfResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/csrf-token`,
-          { credentials: "include" },
-        );
+        const csrfResponse = await fetch(`/api/csrf-token`, {
+          credentials: "include",
+        });
         if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
         const { csrfToken } = await csrfResponse.json();
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/${sub.id}/pause`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "CSRF-Token": csrfToken,
-            },
-            credentials: "include",
-            body: JSON.stringify({
-              pauseStartDate: startDate,
-              pauseEndDate: endDate,
-            }),
+        const response = await fetch(`/api/subscriptions/${sub.id}/pause`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "CSRF-Token": csrfToken,
           },
-        );
+          credentials: "include",
+          body: JSON.stringify({
+            pauseStartDate: startDate,
+            pauseEndDate: endDate,
+          }),
+        });
 
         if (response.ok) {
           const result = await response.json();
@@ -177,24 +173,20 @@ export default function UserDashboardPage() {
       setCancelLoading(true);
       setCancelMessage("");
       try {
-        const csrfResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/csrf-token`,
-          { credentials: "include" },
-        );
+        const csrfResponse = await fetch(`/api/csrf-token`, {
+          credentials: "include",
+        });
         if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
         const { csrfToken } = await csrfResponse.json();
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/${sub.id}/cancel`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "CSRF-Token": csrfToken,
-            },
-            credentials: "include",
+        const response = await fetch(`/api/subscriptions/${sub.id}/cancel`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "CSRF-Token": csrfToken,
           },
-        );
+          credentials: "include",
+        });
 
         if (response.ok) {
           const result = await response.json();
@@ -235,17 +227,14 @@ export default function UserDashboardPage() {
         if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
         const { csrfToken } = await csrfResponse.json();
 
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/subscriptions/${sub.id}/resume`,
-          {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-              "CSRF-Token": csrfToken,
-            },
-            credentials: "include",
+        const response = await fetch(`/api/subscriptions/${sub.id}/resume`, {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            "CSRF-Token": csrfToken,
           },
-        );
+          credentials: "include",
+        });
 
         if (response.ok) {
           const result = await response.json();
@@ -335,8 +324,8 @@ export default function UserDashboardPage() {
       )}
 
       <section className="mb-12">
-        <h2 className="sm:text-left text-center text-3xl font-bold text-emerald-700 mb-6">
-          Langganan Aktif Saya
+        <h2 className="text-center text-3xl font-bold text-emerald-700 mb-6">
+          Langganan Saya
         </h2>
 
         <SubscriptionControls
