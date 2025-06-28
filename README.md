@@ -104,7 +104,8 @@ JWT_SECRET="YOUR_VERY_STRONG_RANDOM_SECRET_KEY_HERE"
 ```
 
 > Replace `[YOUR_PROJECT_REF]`, `[YOUR_PASSWORD]`, and `YOUR_VERY_STRONG_RANDOM_SECRET_KEY_HERE` with your actual Supabase project details and secret key.
-> Generate secret:  
+
+> How to generate your JWT_SECRET if you confused:  
 > `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
 
 ### 4. Database Setup & Migrations 🗄️
