@@ -32,6 +32,7 @@ import {
 import { IconType } from "react-icons";
 import { FiLogIn, FiLogOut, FiUserPlus } from "react-icons/fi";
 import { RxHamburgerMenu } from "react-icons/rx";
+import Image from "next/image";
 
 interface NavLinkItem {
   name: string;
@@ -171,12 +172,14 @@ export default function Navbar() {
           </Sheet>
         </div>
 
-        <div className="flex-grow flex justify-center lg:justify-start">
-          <Link
-            href="/"
-            className="text-white text-3xl font-bold tracking-wide"
-          >
-            SEA Catering
+        <div className="flex-grow gap-2 flex justify-center lg:justify-start mr-5 sm:mr-0 lg:items-center">
+          <Link href="/" className="group flex items-center gap-2">
+            {" "}
+            <Image src="/images/logo.png" width={50} height={50} alt="logo" />
+            <span className="text-white text-3xl font-bold tracking-wide flex flex-col items-start leading-none">
+              <span>SEA</span>
+              <span className="text-xl -mt-1">Catering</span>
+            </span>
           </Link>
         </div>
 

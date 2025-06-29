@@ -41,6 +41,7 @@ This project follows a **monorepo architecture** where the frontend and backend 
 - ✨ **Prettier**: Code formatter for consistent code style
 - 🧹 **ESLint**: Pluggable linter for indentifying and reporting on patterns in JavaScript/TypScript code.
 - 🧪 **Zod**: TypeScript-first schema declaration and validation library
+
 ---
 
 ## 🍽️ Key Features

@@ -1,14 +1,20 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
-import { Card, CardContent } from "@/src/components/ui/card";
 import { cn } from "@/src/lib/utils";
-import { Testimonial } from "@/src/types/index";
-import { SAMPLE_TESTIMONIALS } from "@/src/lib/constants";
-import { FaArrowLeft, FaArrowRight, FaStar } from "react-icons/fa";
+import {
+  FaStar,
+  FaPhone,
+  FaEnvelope,
+  FaMapMarkerAlt,
+  FaWhatsapp,
+  FaFacebook,
+  FaInstagram,
+} from "react-icons/fa";
+import { IoTimeOutline } from "react-icons/io5";
 
 const RatingStars = ({
   rating,
@@ -44,31 +50,67 @@ const RatingStars = ({
 };
 
 export default function ContactPage() {
-  const [customerName, setCustomerName] = useState("");
+  // State untuk Formulir Kontak Umum
+  const [contactName, setContactName] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactSubject, setContactSubject] = useState("");
+  const [contactMessage, setContactMessage] = useState("");
+
+  const [reviewCustomerName, setReviewCustomerName] = useState("");
   const [reviewMessage, setReviewMessage] = useState("");
   const [rating, setRating] = useState(0);
-  const [currentTestimonialIndex, setCurrentTestimonialIndex] = useState(0);
-  const [displayedTestimonials, setDisplayedTestimonials] = useState<
-    Testimonial[]
-  >([]);
+
   const [submissionMessage, setSubmissionMessage] = useState("");
   const [isSubmissionSuccess, setIsSubmissionSuccess] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  useEffect(() => {
-    setDisplayedTestimonials(SAMPLE_TESTIMONIALS.slice(0, 5));
-  }, []);
-
-  const handleSubmitTestimonial = async (e: React.FormEvent) => {
+  const handleSubmitForm = async (
+    e: React.FormEvent,
+    formType: "contact" | "testimonial",
+  ) => {
     e.preventDefault();
-    if (!customerName || !reviewMessage || rating === 0) {
-      setSubmissionMessage("Harap lengkapi semua kolom testimoni.");
-      setIsSubmissionSuccess(false);
-      return;
-    }
-
     setIsSubmitting(true);
     setSubmissionMessage("");
+
+    let payload: any;
+    let endpoint: string;
+    let successMsg: string;
+    let errorMsg: string;
+
+    if (formType === "contact") {
+      if (!contactName || !contactEmail || !contactMessage) {
+        setSubmissionMessage(
+          "Harap lengkapi semua kolom wajib di formulir kontak.",
+        );
+        setIsSubmissionSuccess(false);
+        setIsSubmitting(false);
+        return;
+      }
+      payload = {
+        name: contactName,
+        email: contactEmail,
+        subject: contactSubject,
+        message: contactMessage,
+      };
+      endpoint = `/api/contact`;
+      successMsg =
+        "Pesan Anda berhasil dikirim! Kami akan segera menghubungi Anda.";
+      errorMsg = "Gagal mengirim pesan. Mohon coba lagi.";
+    } else {
+      if (!reviewCustomerName || !reviewMessage || rating === 0) {
+        setSubmissionMessage(
+          "Harap lengkapi semua kolom di formulir testimoni.",
+        );
+        setIsSubmissionSuccess(false);
+        setIsSubmitting(false);
+        return;
+      }
+      payload = { customerName: reviewCustomerName, reviewMessage, rating };
+      endpoint = `/api/testimonials`;
+      successMsg =
+        "Testimoni Anda berhasil dikirim! Terimakasih atas testimoni Anda :)";
+      errorMsg = "Gagal mengirim testimoni. Mohon coba lagi.";
+    }
 
     let csrfToken;
     try {
@@ -87,94 +129,133 @@ export default function ContactPage() {
     }
 
     try {
-      const response = await fetch(`/api/testimonials`, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
           "CSRF-Token": csrfToken,
         },
         credentials: "include",
-        body: JSON.stringify({ customerName, reviewMessage, rating }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
-        setSubmissionMessage(
-          "Testimoni Anda berhasil dikirim! Terimakasih atas testimoni Anda:)",
-        );
+        setSubmissionMessage(successMsg);
         setIsSubmissionSuccess(true);
-
-        setCustomerName("");
-        setReviewMessage("");
-        setRating(0);
+        if (formType === "contact") {
+          setContactName("");
+          setContactEmail("");
+          setContactSubject("");
+          setContactMessage("");
+        } else {
+          setReviewCustomerName("");
+          setReviewMessage("");
+          setRating(0);
+        }
       } else {
-        setSubmissionMessage("Gagal mengirim testimoni. Mohon coba lagi.");
+        setSubmissionMessage(errorMsg);
         setIsSubmissionSuccess(false);
       }
     } catch (error) {
-      console.error("Error submitting testimonial:", error);
-      setSubmissionMessage("Terjadi masalah koneksi saat mengirim testimoni.");
+      console.error(`Error submitting ${formType} form:`, error);
+      setSubmissionMessage(
+        `Terjadi masalah koneksi saat mengirim ${formType === "contact" ? "pesan" : "testimoni"}.`,
+      );
       setIsSubmissionSuccess(false);
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const nextTestimonial = () => {
-    if (displayedTestimonials.length === 0) return;
-    setCurrentTestimonialIndex(
-      (prevIndex) => (prevIndex + 1) % displayedTestimonials.length,
-    );
-  };
-
-  const prevTestimonial = () => {
-    if (displayedTestimonials.length === 0) return;
-    setCurrentTestimonialIndex(
-      (prevIndex) =>
-        (prevIndex - 1 + displayedTestimonials.length) %
-        displayedTestimonials.length,
-    );
-  };
-
-  const currentTestimonial = displayedTestimonials[currentTestimonialIndex];
-
   return (
     <div className="container mx-auto p-8 py-12">
-      <h1 className="text-5xl font-extrabold text-center text-emerald-800 mb-12">
-        Testimoni Pelanggan
+      <h1 className="text-5xl font-extrabold text-center text-emerald-800 mb-6">
+        Hubungi Kami
       </h1>
+      <p className="text-xl text-center text-gray-600 mb-12 max-w-2xl mx-auto">
+        Kami siap membantu Anda! Hubungi kami melalui kontak dibawah ini atau
+        bagikan pengalaman Anda bersama SEA Catering.
+      </p>
 
-      <section className="mb-16 bg-white p-10 rounded-xl shadow-lg border border-gray-200">
-        <h2 className="text-4xl font-bold text-emerald-700 mb-8 text-center">
+      <section className="mb-16 bg-gradient-to-br from-emerald-50 to-green-50 p-8 rounded-xl shadow-lg border border-emerald-200 text-center">
+        <h2 className="text-3xl font-bold text-emerald-700 mb-8">
+          Detail Kontak
+        </h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-8">
+          <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md border border-gray-100">
+            <FaPhone className="w-10 h-10 text-emerald-600 mb-3" />
+            <p className="font-semibold text-lg text-gray-800">Telepon</p>
+            <a
+              href="tel:+628123456789"
+              className="text-blue-600 hover:underline text-md"
+            >
+              08123456789 (Brian, Manager)
+            </a>
+          </div>
+          <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md border border-gray-100">
+            <FaEnvelope className="w-10 h-10 text-emerald-600 mb-3" />
+            <p className="font-semibold text-lg text-gray-800">Email</p>
+            <a
+              href="mailto:info@seacatering.com"
+              className="text-blue-600 hover:underline text-md"
+            >
+              info@seacatering.com
+            </a>
+          </div>
+          <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md border border-gray-100">
+            <FaMapMarkerAlt className="w-10 h-10 text-emerald-600 mb-3" />
+            <p className="font-semibold text-lg text-gray-800">Alamat</p>
+            <p className="text-gray-700 text-md">
+              Jl. Contoh Catering No. 123, Surabaya
+            </p>
+          </div>
+          <div className="flex flex-col items-center p-4 bg-white rounded-lg shadow-md border border-gray-100 col-span-full md:col-span-1 md:col-start-2">
+            <IoTimeOutline className="w-10 h-10 text-emerald-600 mb-3" />
+            <p className="font-semibold text-lg text-gray-800">
+              Jam Operasional
+            </p>
+            <p className="text-gray-700 text-md">
+              Senin - Jumat: 09:00 - 17:00 WIB
+            </p>
+            <p className="text-gray-700 text-md">Sabtu & Minggu: Tutup</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white p-8 rounded-xl shadow-lg border border-emerald-200">
+        <h2 className="text-3xl font-bold text-emerald-700 mb-8 text-center">
           Bagikan Pengalaman Anda!
         </h2>
+        <p className="text-md text-gray-600 text-center mb-6">
+          Suka dengan layanan kami? Tinggalkan ulasan jujur Anda di sini untuk
+          meingkatkan pelayanan kami!
+        </p>
         <form
-          onSubmit={handleSubmitTestimonial}
+          onSubmit={(e) => handleSubmitForm(e, "testimonial")}
           className="max-w-xl mx-auto space-y-6"
         >
-          {submissionMessage && (
-            <div
-              className={cn(
-                "p-3 rounded-md text-center",
-                isSubmissionSuccess
-                  ? "bg-green-100 text-green-700"
-                  : "bg-red-100 text-red-700",
-              )}
-            >
+          {submissionMessage && isSubmissionSuccess && (
+            <div className="p-3 rounded-md text-center bg-green-100 text-green-700">
+              {submissionMessage}
+            </div>
+          )}
+          {submissionMessage && !isSubmissionSuccess && (
+            <div className="p-3 rounded-md text-center bg-red-100 text-red-700">
               {submissionMessage}
             </div>
           )}
           <div>
             <label
-              htmlFor="customerName"
+              htmlFor="reviewCustomerName"
               className="block text-gray-700 text-sm font-medium mb-2"
             >
               Nama Anda:
             </label>
             <Input
               type="text"
-              id="customerName"
-              value={customerName}
-              onChange={(e) => setCustomerName(e.target.value)}
+              id="reviewCustomerName"
+              value={reviewCustomerName}
+              onChange={(e) => setReviewCustomerName(e.target.value)}
               placeholder="Nama Lengkap"
               required
             />
@@ -211,68 +292,6 @@ export default function ContactPage() {
             </Button>
           </div>
         </form>
-      </section>
-
-      <section className="mb-16 bg-emerald-50 p-10 rounded-xl shadow-lg border border-emerald-200 relative">
-        <h2 className="text-4xl font-bold text-emerald-700 mb-8 text-center">
-          Apa Kata Pelanggan Kami
-        </h2>
-        {displayedTestimonials.length === 0 ? (
-          <p className="text-center text-lg text-gray-600">
-            Belum ada testimoni. Jadilah yang pertama!
-          </p>
-        ) : (
-          <Card className="max-w-2xl mx-auto bg-white shadow-md sm:p-6 text-center">
-            <CardContent className="flex flex-col items-center">
-              <p className="sm:text-2xl italic text-gray-800 mb-4 leading-relaxed">
-                {currentTestimonial?.reviewMessage}
-              </p>
-              <p className="font-bold text-xl text-emerald-900 mb-2">
-                - {currentTestimonial?.customerName}
-              </p>
-              <RatingStars rating={currentTestimonial?.rating || 0} />
-            </CardContent>
-          </Card>
-        )}
-        {displayedTestimonials.length > 1 && (
-          <div className="flex justify-between items-center mt-8">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={prevTestimonial}
-              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100 cursor-pointer"
-            >
-              <FaArrowLeft />
-            </Button>
-            <p className="sm:text-lg text-gray-600">
-              {currentTestimonialIndex + 1} dari {displayedTestimonials.length}
-            </p>
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={nextTestimonial}
-              className="rounded-full w-12 h-12 bg-white text-emerald-600 border-emerald-600 hover:bg-emerald-100 cursor-pointer"
-            >
-              <FaArrowRight />
-            </Button>
-          </div>
-        )}
-      </section>
-
-      <section className="bg-white p-10 rounded-xl shadow-lg border border-gray-200 text-center">
-        <h2 className="text-4xl font-bold text-emerald-700 mb-6">
-          Informasi Kontak
-        </h2>
-        <p className="text-lg text-gray-700 mb-2">
-          Manager: <span className="font-semibold">Brian</span>
-        </p>
-        <p className="text-lg text-gray-700">
-          Nomor Telepon: <span className="font-semibold">08123456789</span>
-        </p>
-        <p className="mt-6 text-gray-600 text-md">
-          Jangan ragu untuk menghubungi kami untuk pertanyaan, saran, atau
-          bantuan lebih lanjut!
-        </p>
       </section>
     </div>
   );
