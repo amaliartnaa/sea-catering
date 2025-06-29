@@ -10,9 +10,6 @@ import {
   FaPhone,
   FaEnvelope,
   FaMapMarkerAlt,
-  FaWhatsapp,
-  FaFacebook,
-  FaInstagram,
 } from "react-icons/fa";
 import { IoTimeOutline } from "react-icons/io5";
 
