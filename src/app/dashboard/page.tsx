@@ -324,10 +324,6 @@ export default function UserDashboardPage() {
       )}
 
       <section className="mb-12">
-        <h2 className="text-center text-3xl font-bold text-emerald-700 mb-6">
-          Langganan Saya
-        </h2>
-
         <SubscriptionControls
           currentFilter={filterStatus}
           onFilterChange={setFilterStatus}
