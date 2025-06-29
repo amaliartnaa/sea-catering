@@ -5,12 +5,7 @@ import { Input } from "@/src/components/ui/input";
 import { Textarea } from "@/src/components/ui/textarea";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
-import {
-  FaStar,
-  FaPhone,
-  FaEnvelope,
-  FaMapMarkerAlt,
-} from "react-icons/fa";
+import { FaStar, FaPhone, FaEnvelope, FaMapMarkerAlt } from "react-icons/fa";
 import { IoTimeOutline } from "react-icons/io5";
 
 const RatingStars = ({
@@ -46,8 +41,20 @@ const RatingStars = ({
   );
 };
 
+interface ContactPayload {
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+}
+
+interface TestimonialPayload {
+  customerName: string;
+  reviewMessage: string;
+  rating: number;
+}
+
 export default function ContactPage() {
-  // State untuk Formulir Kontak Umum
   const [contactName, setContactName] = useState("");
   const [contactEmail, setContactEmail] = useState("");
   const [contactSubject, setContactSubject] = useState("");
@@ -69,7 +76,7 @@ export default function ContactPage() {
     setIsSubmitting(true);
     setSubmissionMessage("");
 
-    let payload: any;
+    let payload: ContactPayload | TestimonialPayload;
     let endpoint: string;
     let successMsg: string;
     let errorMsg: string;

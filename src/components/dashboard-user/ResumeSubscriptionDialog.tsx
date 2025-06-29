@@ -13,6 +13,14 @@ import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
 import { Subscription } from "@/src/types/subscription";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 interface ResumeSubscriptionDialogProps {
   isResumeConfirmationDialogOpen: boolean;
@@ -51,19 +59,19 @@ export default function ResumeSubscriptionDialog({
   ]);
 
   return (
-    <Dialog
+    <AlertDialog
       open={isResumeConfirmationDialogOpen}
       onOpenChange={setIsResumeConfirmationDialogOpen}
     >
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Lanjutkan Langganan</DialogTitle>
-          <DialogDescription>
+      <AlertDialogContent className="sm:max-w-[425px]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Lanjutkan Langganan</AlertDialogTitle>
+          <AlertDialogDescription>
             Apakah Anda yakin ingin melanjutkan langganan &quot;
             {selectedSubscriptionToResume?.plan.name}&quot;? Status akan diubah
             kembali menjadi aktif.
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         {resumeMessage && (
           <p
             className={cn(
@@ -74,7 +82,7 @@ export default function ResumeSubscriptionDialog({
             {resumeMessage}
           </p>
         )}
-        <DialogFooter>
+        <AlertDialogFooter>
           <Button
             variant="outline"
             onClick={() => setIsResumeConfirmationDialogOpen(false)}
@@ -89,8 +97,8 @@ export default function ResumeSubscriptionDialog({
           >
             {resumeLoading ? "Melanjutkan..." : "Ya, Lanjutkan"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

@@ -1,18 +1,18 @@
 "use client";
 
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/src/components/ui/dialog";
 import { Button } from "@/src/components/ui/button";
 import { cn } from "@/src/lib/utils";
 
 import { Subscription } from "@/src/types/subscription";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 interface CancelSubscriptionDialogProps {
   isCancelDialogOpen: boolean;
@@ -51,16 +51,16 @@ export default function CancelSubscriptionDialog({
   ]);
 
   return (
-    <Dialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Batalkan Langganan</DialogTitle>
-          <DialogDescription>
+    <AlertDialog open={isCancelDialogOpen} onOpenChange={setIsCancelDialogOpen}>
+      <AlertDialogContent className="sm:max-w-[425px]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Batalkan Langganan</AlertDialogTitle>
+          <AlertDialogDescription>
             Apakah Anda yakin ingin membatalkan langganan &quot;
             {selectedSubscriptionToCancel?.plan.name}&quot;? Tindakan ini tidak
             dapat dibatalkan.
-          </DialogDescription>
-        </DialogHeader>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
         {cancelMessage && (
           <p
             className={cn(
@@ -71,7 +71,7 @@ export default function CancelSubscriptionDialog({
             {cancelMessage}
           </p>
         )}
-        <DialogFooter>
+        <AlertDialogFooter>
           <Button
             variant="outline"
             onClick={() => setIsCancelDialogOpen(false)}
@@ -87,8 +87,8 @@ export default function CancelSubscriptionDialog({
           >
             {cancelLoading ? "Membatalkan..." : "Ya, Batalkan"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }
