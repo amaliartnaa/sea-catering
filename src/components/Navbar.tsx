@@ -12,14 +12,6 @@ import {
   SheetTrigger,
 } from "@/src/components/ui/sheet";
 import { useAuth } from "@/src/context/AuthContext";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/src/components/ui/dialog";
 
 import {
   FaHome,
@@ -32,6 +24,15 @@ import {
 import { IconType } from "react-icons";
 import { FiLogIn, FiLogOut, FiUserPlus } from "react-icons/fi";
 import { RxHamburgerMenu } from "react-icons/rx";
+import Image from "next/image";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "./ui/alert-dialog";
 
 interface NavLinkItem {
   name: string;
@@ -171,12 +172,14 @@ export default function Navbar() {
           </Sheet>
         </div>
 
-        <div className="flex-grow flex justify-center lg:justify-start">
-          <Link
-            href="/"
-            className="text-white text-3xl font-bold tracking-wide"
-          >
-            SEA Catering
+        <div className="flex-grow gap-2 flex justify-center lg:justify-start mr-5 sm:mr-0 lg:items-center">
+          <Link href="/" className="group flex items-center gap-2">
+            {" "}
+            <Image src="/images/logo.png" width={50} height={50} alt="logo" />
+            <span className="text-white text-3xl font-bold tracking-wide flex flex-col items-start leading-none">
+              <span>SEA</span>
+              <span className="text-xl -mt-1">Catering</span>
+            </span>
           </Link>
         </div>
 
@@ -231,16 +234,19 @@ export default function Navbar() {
         </div>
       </div>
 
-      <Dialog open={isLogoutConfirmOpen} onOpenChange={setIsLogoutConfirmOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Konfirmasi Logout</DialogTitle>
-            <DialogDescription>
+      <AlertDialog
+        open={isLogoutConfirmOpen}
+        onOpenChange={setIsLogoutConfirmOpen}
+      >
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Logout</AlertDialogTitle>
+            <AlertDialogDescription>
               Apakah Anda yakin ingin keluar dari akun Anda?
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
 
-          <DialogFooter>
+          <AlertDialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsLogoutConfirmOpen(false)}
@@ -254,9 +260,9 @@ export default function Navbar() {
             >
               Ya, Logout
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </nav>
   );
 }

@@ -1,14 +1,6 @@
 "use client";
 
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/src/components/ui/dialog";
 import { Input } from "@/src/components/ui/input";
 import { Label } from "@/src/components/ui/label";
 import { Button } from "@/src/components/ui/button";
@@ -17,6 +9,14 @@ import { cn } from "@/src/lib/utils";
 import { format, isBefore, isToday } from "date-fns";
 
 import { Subscription } from "@/src/types/subscription";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../ui/alert-dialog";
 
 interface PauseSubscriptionDialogsProps {
   isPauseDialogOpen: boolean;
@@ -108,15 +108,15 @@ export default function PauseSubscriptionDialog({
 
   return (
     <>
-      <Dialog open={isPauseDialogOpen} onOpenChange={setIsPauseDialogOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Jeda Langganan</DialogTitle>
-            <DialogDescription>
+      <AlertDialog open={isPauseDialogOpen} onOpenChange={setIsPauseDialogOpen}>
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Jeda Langganan</AlertDialogTitle>
+            <AlertDialogDescription>
               Pilih tanggal mulai dan akhir untuk menjeda langganan &quot;
               {selectedSubscriptionToPause?.plan.name}&quot;.
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="pauseStartDate" className="text-right">
@@ -159,7 +159,7 @@ export default function PauseSubscriptionDialog({
               </p>
             )}
           </div>
-          <DialogFooter>
+          <AlertDialogFooter>
             <Button
               variant="outline"
               onClick={() => setIsPauseDialogOpen(false)}
@@ -174,18 +174,18 @@ export default function PauseSubscriptionDialog({
             >
               {pauseLoading ? "Memproses..." : "Konfirmasi Jeda"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
-      <Dialog
+      <AlertDialog
         open={isPauseConfirmationDialogOpen}
         onOpenChange={setIsPauseConfirmationDialogOpen}
       >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Konfirmasi Jeda Langganan</DialogTitle>
-            <DialogDescription>
+        <AlertDialogContent className="sm:max-w-[425px]">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Konfirmasi Jeda Langganan</AlertDialogTitle>
+            <AlertDialogDescription>
               Apakah Anda yakin ingin menjeda langganan &quot;
               {selectedSubscriptionToPause?.plan.name}&quot; dari{" "}
               {pauseStartDate
@@ -199,8 +199,8 @@ export default function PauseSubscriptionDialog({
               <strong className="text-red-600">
                 Tanggal jeda tidak dapat dirubah!
               </strong>
-            </DialogDescription>
-          </DialogHeader>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
           {confirmPauseMessage && (
             <p
               className={cn(
@@ -211,7 +211,7 @@ export default function PauseSubscriptionDialog({
               {confirmPauseMessage}
             </p>
           )}
-          <DialogFooter>
+          <AlertDialogFooter>
             <Button
               variant="outline"
               onClick={handleCancelConfirmation}
@@ -226,9 +226,9 @@ export default function PauseSubscriptionDialog({
             >
               {pauseLoading ? "Memproses..." : "Ya, Jeda Sekarang"}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
