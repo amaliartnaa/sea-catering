@@ -104,12 +104,29 @@ Create a `.env` file in the project root (`sea-catering/`). This file contains s
 
 #### 📂 How to Configure Supabase with Prisma
 
-1. Go to [https://app.supabase.com](https://app.supabase.com) and open your project.
-2. In the sidebar, navigate to **Project Settings → Database**.
-3. Click the **ORMs** tab.
-4. Scroll to the section titled **`.env.local`** and copy its content.
-5. Paste it into your project’s `.env` file.
-6. Replace `[YOUR-PASSWORD]` with your actual **database password** (from the Connection Info section).
+##### 🆕 Don't Have a Supabase Project Yet?
+
+If you don't already have a Supabase project:
+
+1. Go to [https://app.supabase.com](https://app.supabase.com) and sign in.
+
+2. Click **"New Project"**, give it a name, and choose a strong **database password**.
+
+3. Wait for the project to be provisioned.
+
+4. Then continue with the setup instructions below.
+
+5. Go to [https://app.supabase.com](https://app.supabase.com) and open your project.
+
+6. In the sidebar, navigate to **Project Settings → Database**.
+
+7. Click the **ORMs** tab.
+
+8. Scroll to the section titled **`.env.local`** and copy its content.
+
+9. Paste it into your project’s `.env` file.
+
+10. Replace `[YOUR-PASSWORD]` with your actual **database password** (from the Connection Info section).
 
 #### ✅ Example `.env`
 
@@ -140,7 +157,9 @@ datasource db {
 }
 ```
 
-#### 🔐 How to generate JWT Secret if you confused
+#### 🔐 How to generate your JWT Secret if you confused
+
+run the command below and paste it into your JWT_SECRET
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
