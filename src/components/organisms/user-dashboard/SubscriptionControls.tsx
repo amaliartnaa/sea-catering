@@ -7,8 +7,8 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/src/components/ui/select";
-import { Label } from "@/src/components/ui/label";
+} from "@/src/components/atoms/ui/select";
+import { Label } from "@/src/components/atoms/ui/label";
 
 interface SubscriptionControlsProps {
   currentFilter: string;
