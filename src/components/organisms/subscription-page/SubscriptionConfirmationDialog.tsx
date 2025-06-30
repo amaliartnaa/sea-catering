@@ -1,12 +1,4 @@
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/src/components/atoms/ui/dialog";
 import { Button } from "@/src/components/atoms/ui/button";
 import { MEAL_PLANS } from "@/src/lib/constants";
 
