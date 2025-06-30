@@ -124,7 +124,9 @@ DIRECT_URL="postgresql://postgres.hlrftyxknskphvlkaqgw:[YOUR-PASSWORD]@aws-0-ap-
 JWT_SECRET="your_random_secret_key"
 ```
 
-#### 🧠 Update `prisma/schema.prisma`
+#### 🧠 Ensure `prisma/schema.prisma` is configured correctly
+
+Make sure your Prisma schema includes the following configuration to support both connection pooling and direct database access:
 
 ```prisma
 generator client {
