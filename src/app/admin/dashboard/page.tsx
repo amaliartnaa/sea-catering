@@ -1,39 +1,22 @@
 "use client";
 
-import { Button } from "@/src/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/src/components/ui/card";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { useAuth } from "@/src/context/AuthContext";
-import { cn } from "@/src/lib/utils";
-import { format } from "date-fns";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import React, { useCallback, useEffect, useState } from "react";
-import { FaRegCalendarAlt } from "react-icons/fa";
-import {
-  Bar,
-  BarChart,
-  CartesianGrid,
-  Cell,
-  Legend,
-  Pie,
-  PieChart,
-  ResponsiveContainer,
-  Tooltip,
-  XAxis,
-  YAxis,
-} from "recharts";
+import { useAuth } from "@/src/context/AuthContext";
+import { format } from "date-fns";
+import { SubmissionMessage } from "@/src/components/molecules/common/SubmissionMessage";
+import { AdminDashboardFilter } from "@/src/components/organisms/admin-dashboard/AdminDashboardFilter";
+import { MetricCard } from "@/src/components/molecules/dashboard/MetricCard";
+import { SubscriptionBarChart } from "@/src/components/organisms/admin-dashboard/SubscriptionBarChart";
+import { SubscriptionPieChart } from "@/src/components/organisms/admin-dashboard/SubscriptionPieChart";
 
 interface AdminMetrics {
   newSubscriptions: number;
   monthlyRecurringRevenue: number;
   reactivations: number;
   totalActiveSubscriptions: number;
+  totalCancelledSubscriptions?: number;
+  totalPausedSubscriptions?: number;
 }
 
 export default function AdminDashboardPage() {
@@ -118,10 +101,12 @@ export default function AdminDashboardPage() {
     {
       name: "Langganan Baru",
       value: metrics?.newSubscriptions || 0,
+      fill: "rgba(75, 192, 192, 0.8)",
     },
     {
       name: "Reaktivasi",
       value: metrics?.reactivations || 0,
+      fill: "rgba(153, 102, 255, 0.8)",
     },
   ];
 
@@ -134,8 +119,8 @@ export default function AdminDashboardPage() {
     {
       name: "Non-Aktif",
       value:
-        (metrics?.newSubscriptions || 0) -
-        (metrics?.totalActiveSubscriptions || 0),
+        (metrics?.totalCancelledSubscriptions || 0) +
+        (metrics?.totalPausedSubscriptions || 0),
       fill: "rgb(255, 99, 132)",
     },
   ];
@@ -143,183 +128,64 @@ export default function AdminDashboardPage() {
   return (
     <div className="container mx-auto p-8 py-12">
       <h1 className="text-5xl font-extrabold text-center text-emerald-800 mb-12">
-        Admin Dashboard
+        Halo, Admin!
       </h1>
 
-      {message && (
-        <div
-          className={cn(
-            "p-4 rounded-md mb-6 text-center",
-            "bg-red-100 text-red-700 border border-red-200",
-          )}
-        >
-          {message}
-        </div>
-      )}
+      <SubmissionMessage message={message} isSuccess={false} />
 
-      <section className="mb-12 bg-white p-8 rounded-lg shadow-lg border border-gray-200">
-        <h2 className="text-3xl font-bold text-emerald-700 mb-6">
-          Filter Data
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
-          <div>
-            <Label
-              htmlFor="startDate"
-              className="block text-gray-700 text-sm font-medium mb-2"
-            >
-              Tanggal Mulai:
-            </Label>
-            <div className="relative w-full">
-              <Input
-                type="date"
-                id="startDate"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                className="w-full pr-10 appearance-none calendar-icon-none clickable-calendar"
-              />
-              <FaRegCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            </div>
-          </div>
-          <div>
-            <Label
-              htmlFor="endDate"
-              className="block text-gray-700 text-sm font-medium mb-2"
-            >
-              Tanggal Akhir:
-            </Label>
-            <div className="relative w-full">
-              <Input
-                type="date"
-                id="endDate"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                className="w-full pr-10 appearance-none calendar-icon-none clickable-calendar"
-              />
-              <FaRegCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
-            </div>
-          </div>
-          <Button
-            onClick={fetchAdminMetrics}
-            disabled={loadingMetrics}
-            className="bg-emerald-600 hover:bg-emerald-700 col-span-1 md:col-span-1 cursor-pointer"
-          >
-            {loadingMetrics ? "Memuat..." : "Terapkan filter"}
-          </Button>
-        </div>
-      </section>
+      <AdminDashboardFilter
+        startDate={startDate}
+        setStartDate={setStartDate}
+        endDate={endDate}
+        setEndDate={setEndDate}
+        onApplyFilter={fetchAdminMetrics}
+        loading={loadingMetrics}
+      />
 
       {loadingMetrics ? (
-        <p className="text-center text-gray-600">Memuat metrik...</p>
+        <p className="text-center text-gray-600 mt-8">Memuat metrik...</p>
       ) : metrics ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
-          <Card className="shadow-lg justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-emerald-800">
-                Langganan Baru
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-extrabold text-green-700">
-                {metrics.newSubscriptions}
-              </p>
-              <p className="text-gray-600">selama periode yang dipilih</p>
-            </CardContent>
-          </Card>
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8">
+            <MetricCard
+              title="Langganan Baru"
+              value={metrics.newSubscriptions}
+              description="selama periode yang dipilih"
+              valueColorClass="text-green-700"
+            />
+            <MetricCard
+              title="Monthly Recurring Revenue (MRR)"
+              value={`Rp${metrics.monthlyRecurringRevenue.toLocaleString("id-ID")}`}
+              description="dari langganan aktif di periode ini"
+              valueColorClass="text-blue-700"
+            />
+            <MetricCard
+              title="Reaktivasi"
+              value={metrics.reactivations}
+              description="langganan yang diaktifkan kembali"
+              valueColorClass="text-purple-700"
+            />
+            <MetricCard
+              title="Total Langganan Aktif"
+              value={metrics.totalActiveSubscriptions}
+              description="total langganan aktif saat ini"
+              valueColorClass="text-emerald-700"
+            />
+          </div>
 
-          <Card className="shadow-lg justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-emerald-800">
-                Monthly Recurring Revenue (MRR)
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-extrabold text-blue-700">
-                Rp{metrics.monthlyRecurringRevenue.toLocaleString("id-ID")}
-              </p>
-              <p className="text-gray-600">
-                dari langganan aktif di periode ini
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-emerald-800">
-                Reaktivasi
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-extrabold text-purple-700">
-                {metrics.reactivations}
-              </p>
-              <p className="text-gray-600">langganan yang diaktifkan kembali</p>
-            </CardContent>
-          </Card>
-
-          <Card className="shadow-lg justify-between">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-emerald-800">
-                Total Langganan Aktif
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-4xl font-extrabold text-emerald-700">
-                {metrics.totalActiveSubscriptions}
-              </p>
-              <p className="text-gray-600">total langganan aktif saat ini</p>
-            </CardContent>
-          </Card>
-
-          <Card className="lg:col-span-2 shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-center mb-4">
-              Langganan & Reaktivasi per Periode
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart
-                data={barChartData}
-                margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
-                <Legend />
-                <Bar
-                  dataKey="value"
-                  name="Jumlah"
-                  fill="rgba(75, 192, 192, 0.8)"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </Card>
-
-          <Card className="lg:col-span-2 shadow-lg p-6">
-            <h3 className="text-lg font-semibold text-center mb-4">
-              Distribusi Langganan (Total Aktif)
-            </h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie
-                  data={pieChartData}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {pieChartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.fill} />
-                  ))}
-                </Pie>
-                <Tooltip />
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
-          </Card>
+          <div className="grid lg:grid-cols-2 gap-8">
+            <SubscriptionBarChart
+              data={barChartData}
+              title="Langganan & Reaktivasi per Periode"
+            />
+            <SubscriptionPieChart
+              data={pieChartData}
+              title="Distribusi Langganan (Total Aktif vs Non-Aktif)"
+            />
+          </div>
         </div>
       ) : (
-        <p className="text-center text-gray-600">
+        <p className="text-center text-gray-600 mt-8">
           Tidak ada data metrik yang tersedia.
         </p>
       )}

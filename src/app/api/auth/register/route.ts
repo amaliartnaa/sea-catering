@@ -14,7 +14,7 @@ export async function POST(req: Request) {
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
       return NextResponse.json(
-        { message: "Email already registered." },
+        { message: "Maaf, email ini sudah terdaftar." },
         { status: 409 },
       );
     }
@@ -39,7 +39,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json(
       {
-        message: "User registered successfully!",
+        message: "Pendaftaran akun Anda berhasil!",
         user: userWithoutPassword,
       },
       { status: 201 },
@@ -47,22 +47,14 @@ export async function POST(req: Request) {
   } catch (error: unknown) {
     if (error instanceof ZodError) {
       return NextResponse.json(
-        { message: "Validation failed", errors: error.errors },
+        { message: "Data yang Anda masukkan tidak valid." },
         { status: 400 },
       );
-    } else if (error instanceof Error) {
-      console.error("Error during user registration:", error.message);
-      return NextResponse.json(
-        {
-          message:
-            "Internal server error during registration: " + error.message,
-        },
-        { status: 500 },
-      );
     } else {
-      console.error("An unknown error occurred during registration:", error);
+      console.error("Terjadi kesalahan saat pendaftaran:", error);
+
       return NextResponse.json(
-        { message: "An unknown internal server error occurred." },
+        { message: "Terjadi kesalahan pada server. Mohon coba lagi nanti." },
         { status: 500 },
       );
     }

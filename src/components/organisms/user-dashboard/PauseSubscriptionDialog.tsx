@@ -1,13 +1,11 @@
 "use client";
 
-import React from "react";
-import { Input } from "@/src/components/ui/input";
-import { Label } from "@/src/components/ui/label";
-import { Button } from "@/src/components/ui/button";
+import React, { useState, useEffect } from "react";
+import { Input } from "@/src/components/atoms/ui/input";
+import { Label } from "@/src/components/atoms/ui/label";
+import { Button } from "@/src/components/atoms/ui/button";
 import { FaRegCalendarAlt } from "react-icons/fa";
-import { cn } from "@/src/lib/utils";
 import { format, isBefore, isToday } from "date-fns";
-
 import { Subscription } from "@/src/types/subscription";
 import {
   AlertDialog,
@@ -16,56 +14,55 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alert-dialog";
+} from "@/src/components/atoms/ui/alert-dialog";
+import { SubmissionMessage } from "@/src/components/molecules/common/SubmissionMessage";
 
-interface PauseSubscriptionDialogsProps {
-  isPauseDialogOpen: boolean;
-  setIsPauseDialogOpen: (open: boolean) => void;
-  selectedSubscriptionToPause: Subscription | null;
-
-  pauseStartDate: string;
-  setPauseStartDate: (date: string) => void;
-  pauseEndDate: string;
-  setPauseEndDate: (date: string) => void;
-
-  pauseLoading: boolean;
-  pauseMessage: string;
-  setPauseMessage: (msg: string) => void;
-  confirmPauseMessage: string;
-  setConfirmPauseMessage: (msg: string) => void;
-  apiSuccessStatus: boolean;
-
-  isPauseConfirmationDialogOpen: boolean;
-  setIsPauseConfirmationDialogOpen: (open: boolean) => void;
-
-  onConfirmPause: (
-    sub: Subscription,
+interface PauseSubscriptionDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  subscription: Subscription | null;
+  onConfirm: (
+    subId: string,
     startDate: string,
     endDate: string,
-  ) => void;
+  ) => Promise<boolean>;
 }
 
 export default function PauseSubscriptionDialog({
-  isPauseDialogOpen,
-  setIsPauseDialogOpen,
-  selectedSubscriptionToPause,
-  pauseStartDate,
-  setPauseStartDate,
-  pauseEndDate,
-  setPauseEndDate,
-  pauseLoading,
-  pauseMessage,
-  setPauseMessage,
-  confirmPauseMessage,
-  setConfirmPauseMessage,
-  apiSuccessStatus,
-  isPauseConfirmationDialogOpen,
-  setIsPauseConfirmationDialogOpen,
-  onConfirmPause,
-}: PauseSubscriptionDialogsProps) {
+  isOpen,
+  onClose,
+  subscription,
+  onConfirm,
+}: PauseSubscriptionDialogProps) {
+  const [pauseStartDate, setPauseStartDate] = useState("");
+  const [pauseEndDate, setPauseEndDate] = useState("");
+
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+  const [isSuccess, setIsSuccess] = useState(false);
+
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [isConfirmSuccess, setIsConfirmSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      setPauseStartDate("");
+      setPauseEndDate("");
+      setMessage("");
+      setIsSuccess(false);
+      setLoading(false);
+      setIsConfirmationOpen(false);
+      setConfirmMessage("");
+      setIsConfirmSuccess(false);
+    }
+  }, [isOpen]);
+
   const handlePrePause = () => {
-    if (!selectedSubscriptionToPause || !pauseStartDate || !pauseEndDate) {
-      setPauseMessage("Tanggal mulai dan akhir jeda diperlukan.");
+    setMessage("");
+    if (!subscription || !pauseStartDate || !pauseEndDate) {
+      setMessage("Tanggal mulai dan akhir jeda diperlukan.");
+      setIsSuccess(false);
       return;
     }
     const start = new Date(pauseStartDate);
@@ -77,44 +74,63 @@ export default function PauseSubscriptionDialog({
     end.setHours(0, 0, 0, 0);
 
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
-      setPauseMessage("Format tanggal tidak valid.");
+      setMessage("Format tanggal tidak valid.");
+      setIsSuccess(false);
       return;
     }
     if (isBefore(end, start)) {
-      setPauseMessage("Tanggal akhir tidak boleh sebelum tanggal mulai.");
+      setMessage("Tanggal akhir tidak boleh sebelum tanggal mulai.");
+      setIsSuccess(false);
       return;
     }
     if (isBefore(start, today) && !isToday(start)) {
-      setPauseMessage("Tanggal mulai tidak boleh di masa lalu.");
+      setMessage("Tanggal mulai tidak boleh di masa lalu.");
+      setIsSuccess(false);
       return;
     }
 
-    setPauseMessage("");
-    setConfirmPauseMessage("");
-    setIsPauseDialogOpen(false);
-    setIsPauseConfirmationDialogOpen(true);
+    onClose();
+    setIsConfirmationOpen(true);
+  };
+
+  const handleConfirmPauseYesClick = async () => {
+    if (!subscription) return;
+    setLoading(true);
+    setConfirmMessage("");
+
+    const success = await onConfirm(
+      subscription.id,
+      pauseStartDate,
+      pauseEndDate,
+    );
+    if (success) {
+      setConfirmMessage("Langganan berhasil dijeda!");
+      setIsConfirmSuccess(true);
+      setTimeout(() => {
+        setIsConfirmationOpen(false);
+        onClose();
+      }, 1500);
+    } else {
+      setConfirmMessage("Gagal menjeda langganan.");
+      setIsConfirmSuccess(false);
+    }
+    setLoading(false);
   };
 
   const handleCancelConfirmation = () => {
-    setIsPauseConfirmationDialogOpen(false);
-    setIsPauseDialogOpen(true);
-  };
-
-  const handleConfirmPauseYesClick = () => {
-    if (selectedSubscriptionToPause) {
-      onConfirmPause(selectedSubscriptionToPause, pauseStartDate, pauseEndDate);
-    }
+    setIsConfirmationOpen(false);
+    onClose();
   };
 
   return (
     <>
-      <AlertDialog open={isPauseDialogOpen} onOpenChange={setIsPauseDialogOpen}>
+      <AlertDialog open={isOpen} onOpenChange={onClose}>
         <AlertDialogContent className="sm:max-w-[425px]">
           <AlertDialogHeader>
             <AlertDialogTitle>Jeda Langganan</AlertDialogTitle>
             <AlertDialogDescription>
               Pilih tanggal mulai dan akhir untuk menjeda langganan &quot;
-              {selectedSubscriptionToPause?.plan.name}&quot;.
+              {subscription?.plan.name}&quot;.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="grid gap-4 py-4">
@@ -129,6 +145,7 @@ export default function PauseSubscriptionDialog({
                   value={pauseStartDate}
                   onChange={(e) => setPauseStartDate(e.target.value)}
                   className="w-full pr-10 appearance-none calendar-icon-none clickable-calendar"
+                  disabled={loading}
                 />
                 <FaRegCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
@@ -144,50 +161,43 @@ export default function PauseSubscriptionDialog({
                   value={pauseEndDate}
                   onChange={(e) => setPauseEndDate(e.target.value)}
                   className="w-full pr-10 appearance-none calendar-icon-none clickable-calendar"
+                  disabled={loading}
                 />
                 <FaRegCalendarAlt className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
               </div>
             </div>
-            {pauseMessage && (
-              <p
-                className={cn(
-                  "text-center text-sm",
-                  apiSuccessStatus ? "text-green-600" : "text-red-600",
-                )}
-              >
-                {pauseMessage}
-              </p>
-            )}
+            <SubmissionMessage message={message} isSuccess={isSuccess} />
           </div>
           <AlertDialogFooter>
             <Button
               variant="outline"
-              onClick={() => setIsPauseDialogOpen(false)}
-              disabled={pauseLoading}
+              onClick={onClose}
+              disabled={loading}
+              className="cursor-pointer"
             >
               Batal
             </Button>
             <Button
               onClick={handlePrePause}
-              disabled={!pauseStartDate || !pauseEndDate || pauseLoading}
+              disabled={!pauseStartDate || !pauseEndDate || loading}
               className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
             >
-              {pauseLoading ? "Memproses..." : "Konfirmasi Jeda"}
+              {loading ? "Memproses..." : "Konfirmasi Jeda"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
 
       <AlertDialog
-        open={isPauseConfirmationDialogOpen}
-        onOpenChange={setIsPauseConfirmationDialogOpen}
+        open={isConfirmationOpen}
+        onOpenChange={setIsConfirmationOpen}
       >
         <AlertDialogContent className="sm:max-w-[425px]">
           <AlertDialogHeader>
             <AlertDialogTitle>Konfirmasi Jeda Langganan</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menjeda langganan &quot;
-              {selectedSubscriptionToPause?.plan.name}&quot; dari{" "}
+              {subscription?.plan.name}&quot; dari{" "}
               {pauseStartDate
                 ? format(new Date(pauseStartDate), "dd/MM/yyyy")
                 : "N/A"}{" "}
@@ -201,30 +211,25 @@ export default function PauseSubscriptionDialog({
               </strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          {confirmPauseMessage && (
-            <p
-              className={cn(
-                "text-center text-sm",
-                apiSuccessStatus ? "text-green-600" : "text-red-600",
-              )}
-            >
-              {confirmPauseMessage}
-            </p>
-          )}
+          <SubmissionMessage
+            message={confirmMessage}
+            isSuccess={isConfirmSuccess}
+          />
           <AlertDialogFooter>
             <Button
               variant="outline"
               onClick={handleCancelConfirmation}
-              disabled={pauseLoading}
+              disabled={loading}
+              className="cursor-pointer"
             >
               Tidak
             </Button>
             <Button
               onClick={handleConfirmPauseYesClick}
-              disabled={pauseLoading}
+              disabled={loading}
               className="bg-emerald-600 hover:bg-emerald-700 cursor-pointer"
             >
-              {pauseLoading ? "Memproses..." : "Ya, Jeda Sekarang"}
+              {loading ? "Memproses..." : "Ya, Jeda Sekarang"}
             </Button>
           </AlertDialogFooter>
         </AlertDialogContent>

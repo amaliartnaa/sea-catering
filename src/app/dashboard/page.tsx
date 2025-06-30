@@ -4,15 +4,14 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/src/context/AuthContext";
 import Link from "next/link";
-import { cn } from "@/src/lib/utils";
-
 import { Subscription } from "@/src/types/subscription";
 
-import SubscriptionCard from "@/src/components/dashboard-user/SubscriptionCard";
-import PauseSubscriptionDialog from "@/src/components/dashboard-user/PauseSubscriptionDialog";
-import CancelSubscriptionDialog from "@/src/components/dashboard-user/CancelSubscriptionDialog";
-import ResumeSubscriptionDialog from "@/src/components/dashboard-user/ResumeSubscriptionDialog";
-import SubscriptionControls from "@/src/components/dashboard-user/SubscriptionControls";
+import { SubmissionMessage } from "@/src/components/molecules/common/SubmissionMessage";
+import SubscriptionCard from "@/src/components/molecules/content/SubscriptionCard";
+import PauseSubscriptionDialog from "@/src/components/organisms/user-dashboard/PauseSubscriptionDialog";
+import CancelSubscriptionDialog from "@/src/components/organisms/user-dashboard/CancelSubscriptionDialog";
+import ResumeSubscriptionDialog from "@/src/components/organisms/user-dashboard/ResumeSubscriptionDialog";
+import SubscriptionControls from "@/src/components/organisms/user-dashboard/SubscriptionControls";
 
 export default function UserDashboardPage() {
   const { user, isLoading, isAuthenticated, logout } = useAuth();
@@ -20,6 +19,7 @@ export default function UserDashboardPage() {
 
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [loadingSubscriptions, setLoadingSubscriptions] = useState(true);
+
   const [dashboardMessage, setDashboardMessage] = useState("");
   const [isDashboardSuccess, setIsDashboardSuccess] = useState(false);
 
@@ -30,26 +30,35 @@ export default function UserDashboardPage() {
   const [isPauseDialogOpen, setIsPauseDialogOpen] = useState(false);
   const [selectedSubscriptionToPause, setSelectedSubscriptionToPause] =
     useState<Subscription | null>(null);
-  const [pauseStartDate, setPauseStartDate] = useState("");
-  const [pauseEndDate, setPauseEndDate] = useState("");
-  const [pauseLoading, setPauseLoading] = useState(false);
-  const [pauseMessage, setPauseMessage] = useState("");
-  const [isPauseConfirmationDialogOpen, setIsPauseConfirmationDialogOpen] =
-    useState(false);
-  const [confirmPauseMessage, setConfirmPauseMessage] = useState("");
 
   const [isCancelDialogOpen, setIsCancelDialogOpen] = useState(false);
   const [selectedSubscriptionToCancel, setSelectedSubscriptionToCancel] =
     useState<Subscription | null>(null);
-  const [cancelLoading, setCancelLoading] = useState(false);
-  const [cancelMessage, setCancelMessage] = useState("");
 
-  const [isResumeConfirmationDialogOpen, setIsResumeConfirmationDialogOpen] =
-    useState(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
   const [selectedSubscriptionToResume, setSelectedSubscriptionToResume] =
     useState<Subscription | null>(null);
-  const [resumeLoading, setResumeLoading] = useState(false);
-  const [resumeMessage, setResumeMessage] = useState("");
+
+  const fetchCsrfToken = useCallback(async () => {
+    try {
+      const csrfResponse = await fetch(`/api/csrf-token`, {
+        credentials: "include",
+      });
+      if (!csrfResponse.ok) {
+        throw new Error("Failed to fetch CSRF token: " + csrfResponse.status);
+      }
+      const { csrfToken } = await csrfResponse.json();
+      if (!csrfToken) {
+        throw new Error("CSRF token not found in response.");
+      }
+      return csrfToken;
+    } catch (error) {
+      console.error("[Frontend] Error fetching CSRF token:", error);
+      setDashboardMessage("Gagal mendapatkan token keamanan. Mohon coba lagi.");
+      setIsDashboardSuccess(false);
+      return null;
+    }
+  }, []);
 
   const fetchUserSubscriptions = useCallback(async () => {
     setLoadingSubscriptions(true);
@@ -59,7 +68,9 @@ export default function UserDashboardPage() {
       if (filterStatus !== "all") {
         queryParams.append("status", filterStatus);
       }
-
+      if (filterPlanName !== "all") {
+        queryParams.append("planName", filterPlanName);
+      }
       const [sortByField, sortByOrder] = sortOrder.split("_");
       queryParams.append("sortBy", sortByField);
       queryParams.append("sortOrder", sortByOrder);
@@ -92,7 +103,7 @@ export default function UserDashboardPage() {
     } finally {
       setLoadingSubscriptions(false);
     }
-  }, [logout, filterStatus, sortOrder]);
+  }, [logout, filterStatus, sortOrder, filterPlanName]);
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -100,24 +111,23 @@ export default function UserDashboardPage() {
     } else if (isAuthenticated) {
       fetchUserSubscriptions();
     }
-  }, [isAuthenticated, sortOrder, isLoading, router, fetchUserSubscriptions]);
+  }, [isAuthenticated, isLoading, router, fetchUserSubscriptions]);
 
   const filteredAndSortedSubscriptions = useMemo(() => {
     return subscriptions;
   }, [subscriptions]);
 
-  const handleConfirmPause = useCallback(
-    async (sub: Subscription, startDate: string, endDate: string) => {
-      setPauseLoading(true);
-      setConfirmPauseMessage("");
+  const handlePauseSubscription = useCallback(
+    async (
+      subId: string,
+      startDate: string,
+      endDate: string,
+    ): Promise<boolean> => {
       try {
-        const csrfResponse = await fetch(`/api/csrf-token`, {
-          credentials: "include",
-        });
-        if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
-        const { csrfToken } = await csrfResponse.json();
+        const csrfToken = await fetchCsrfToken();
+        if (!csrfToken) return false;
 
-        const response = await fetch(`/api/subscriptions/${sub.id}/pause`, {
+        const response = await fetch(`/api/subscriptions/${subId}/pause`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -131,55 +141,34 @@ export default function UserDashboardPage() {
         });
 
         if (response.ok) {
-          const result = await response.json();
-          setConfirmPauseMessage(
-            result.message || "Langganan berhasil dijeda!",
-          );
+          setDashboardMessage("Langganan berhasil dijeda!");
           setIsDashboardSuccess(true);
           await fetchUserSubscriptions();
-          setIsPauseConfirmationDialogOpen(false);
-          setIsPauseDialogOpen(false);
-          setPauseStartDate("");
-          setPauseEndDate("");
+          return true;
         } else {
           const errorData = await response.json();
-          setConfirmPauseMessage(
-            errorData.message || "Gagal menjeda langganan.",
-          );
+          setDashboardMessage(errorData.message || "Gagal menjeda langganan.");
           setIsDashboardSuccess(false);
+          if (response.status === 401 || response.status === 403) logout();
+          return false;
         }
       } catch (error) {
         console.error("Error pausing subscription:", error);
-        setConfirmPauseMessage("Terjadi masalah koneksi.");
+        setDashboardMessage("Terjadi masalah koneksi saat menjeda langganan.");
         setIsDashboardSuccess(false);
-      } finally {
-        setPauseLoading(false);
+        return false;
       }
     },
-    [
-      fetchUserSubscriptions,
-      setPauseLoading,
-      setConfirmPauseMessage,
-      setIsDashboardSuccess,
-      setIsPauseConfirmationDialogOpen,
-      setIsPauseDialogOpen,
-      setPauseStartDate,
-      setPauseEndDate,
-    ],
+    [fetchCsrfToken, fetchUserSubscriptions, logout],
   );
 
-  const handleConfirmCancel = useCallback(
-    async (sub: Subscription) => {
-      setCancelLoading(true);
-      setCancelMessage("");
+  const handleCancelSubscription = useCallback(
+    async (subId: string): Promise<boolean> => {
       try {
-        const csrfResponse = await fetch(`/api/csrf-token`, {
-          credentials: "include",
-        });
-        if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
-        const { csrfToken } = await csrfResponse.json();
+        const csrfToken = await fetchCsrfToken();
+        if (!csrfToken) return false;
 
-        const response = await fetch(`/api/subscriptions/${sub.id}/cancel`, {
+        const response = await fetch(`/api/subscriptions/${subId}/cancel`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -189,45 +178,38 @@ export default function UserDashboardPage() {
         });
 
         if (response.ok) {
-          const result = await response.json();
-          setCancelMessage(result.message || "Langganan berhasil dibatalkan!");
+          setDashboardMessage("Langganan berhasil dibatalkan!");
           setIsDashboardSuccess(true);
           await fetchUserSubscriptions();
-          setIsCancelDialogOpen(false);
+          return true;
         } else {
           const errorData = await response.json();
-          setCancelMessage(errorData.message || "Gagal membatalkan langganan.");
+          setDashboardMessage(
+            errorData.message || "Gagal membatalkan langganan.",
+          );
           setIsDashboardSuccess(false);
+          if (response.status === 401 || response.status === 403) logout();
+          return false;
         }
       } catch (error) {
         console.error("Error cancelling subscription:", error);
-        setCancelMessage("Terjadi masalah koneksi.");
+        setDashboardMessage(
+          "Terjadi masalah koneksi saat membatalkan langganan.",
+        );
         setIsDashboardSuccess(false);
-      } finally {
-        setCancelLoading(false);
+        return false;
       }
     },
-    [
-      fetchUserSubscriptions,
-      setCancelLoading,
-      setCancelMessage,
-      setIsDashboardSuccess,
-      setIsCancelDialogOpen,
-    ],
+    [fetchCsrfToken, fetchUserSubscriptions, logout],
   );
 
-  const handleConfirmResume = useCallback(
-    async (sub: Subscription) => {
-      setResumeLoading(true);
-      setResumeMessage("");
+  const handleResumeSubscription = useCallback(
+    async (subId: string): Promise<boolean> => {
       try {
-        const csrfResponse = await fetch(`/api/csrf-token`, {
-          credentials: "include",
-        });
-        if (!csrfResponse.ok) throw new Error("Failed to fetch CSRF token");
-        const { csrfToken } = await csrfResponse.json();
+        const csrfToken = await fetchCsrfToken();
+        if (!csrfToken) return false;
 
-        const response = await fetch(`/api/subscriptions/${sub.id}/resume`, {
+        const response = await fetch(`/api/subscriptions/${subId}/resume`, {
           method: "PUT",
           headers: {
             "Content-Type": "application/json",
@@ -237,31 +219,29 @@ export default function UserDashboardPage() {
         });
 
         if (response.ok) {
-          const result = await response.json();
-          setResumeMessage(result.message || "Langganan berhasil dilanjutkan!");
+          setDashboardMessage("Langganan berhasil dilanjutkan!");
           setIsDashboardSuccess(true);
           await fetchUserSubscriptions();
-          setIsResumeConfirmationDialogOpen(false);
+          return true;
         } else {
           const errorData = await response.json();
-          setResumeMessage(errorData.message || "Gagal melanjutkan langganan.");
+          setDashboardMessage(
+            errorData.message || "Gagal melanjutkan langganan.",
+          );
           setIsDashboardSuccess(false);
+          if (response.status === 401 || response.status === 403) logout();
+          return false;
         }
       } catch (error) {
         console.error("Error resuming subscription:", error);
-        setResumeMessage("Terjadi masalah koneksi.");
+        setDashboardMessage(
+          "Terjadi masalah koneksi saat melanjutkan langganan.",
+        );
         setIsDashboardSuccess(false);
-      } finally {
-        setResumeLoading(false);
+        return false;
       }
     },
-    [
-      fetchUserSubscriptions,
-      setResumeLoading,
-      setResumeMessage,
-      setIsDashboardSuccess,
-      setIsResumeConfirmationDialogOpen,
-    ],
+    [fetchCsrfToken, fetchUserSubscriptions, logout],
   );
 
   if (isLoading || !isAuthenticated) {
@@ -275,32 +255,39 @@ export default function UserDashboardPage() {
   const dashboardTitle = user?.fullName
     ? `Halo, ${user.fullName}!`
     : "Dashboard Pengguna";
-
   let welcomeMessage = "Selamat datang di dashboard Anda.";
-  if (!loadingSubscriptions && subscriptions.length > 0) {
-    const activeSubs = subscriptions.filter(
-      (s) => s.status === "active",
-    ).length;
-    const pausedSubs = subscriptions.filter(
-      (s) => s.status === "paused",
-    ).length;
+  if (!loadingSubscriptions) {
+    if (subscriptions.length > 0) {
+      const activeSubs = subscriptions.filter(
+        (s) => s.status === "active",
+      ).length;
+      const pausedSubs = subscriptions.filter(
+        (s) => s.status === "paused",
+      ).length;
+      const cancelledSubs = subscriptions.filter(
+        (s) => s.status === "cancelled",
+      ).length;
 
-    if (activeSubs > 0) {
-      welcomeMessage = `Anda memiliki ${activeSubs} langganan aktif.`;
-      if (pausedSubs > 0) {
-        welcomeMessage += ` (${pausedSubs} dijeda).`;
+      if (activeSubs > 0) {
+        welcomeMessage = `Anda memiliki ${activeSubs} langganan aktif.`;
+        if (pausedSubs > 0) {
+          welcomeMessage += ` (${pausedSubs} dijeda).`;
+        }
+        if (cancelledSubs > 0) {
+          welcomeMessage += ` (${cancelledSubs} dibatalkan).`;
+        }
+      } else if (pausedSubs > 0) {
+        welcomeMessage = `Anda memiliki ${pausedSubs} langganan dijeda.`;
+        if (cancelledSubs > 0) {
+          welcomeMessage += ` (${cancelledSubs} dibatalkan).`;
+        }
+      } else {
+        welcomeMessage = `Anda memiliki ${cancelledSubs} langganan dibatalkan.`;
       }
-    } else if (pausedSubs > 0) {
-      welcomeMessage = `Anda memiliki ${pausedSubs} langganan dijeda.`;
-    } else if (subscriptions.length > 0) {
-      welcomeMessage = `Anda memiliki ${subscriptions.length} langganan, namun saat ini tidak ada yang aktif.`;
     } else {
       welcomeMessage =
         "Anda belum memiliki langganan. Mulai hidup sehat bersama kami!";
     }
-  } else if (!loadingSubscriptions && subscriptions.length === 0) {
-    welcomeMessage =
-      "Anda belum memiliki langganan. Mulai hidup sehat bersama kami!";
   }
 
   return (
@@ -310,18 +297,10 @@ export default function UserDashboardPage() {
       </h1>
       <p className="text-xl text-center text-gray-600 mb-8">{welcomeMessage}</p>
 
-      {dashboardMessage && (
-        <div
-          className={cn(
-            "p-4 rounded-md mb-6 text-center",
-            isDashboardSuccess
-              ? "bg-green-100 text-green-700 border border-green-200"
-              : "bg-red-100 text-red-700 border border-red-200",
-          )}
-        >
-          {dashboardMessage}
-        </div>
-      )}
+      <SubmissionMessage
+        message={dashboardMessage}
+        isSuccess={isDashboardSuccess}
+      />
 
       <section className="mb-12">
         <SubscriptionControls
@@ -338,8 +317,8 @@ export default function UserDashboardPage() {
         ) : filteredAndSortedSubscriptions.length === 0 ? (
           <p className="text-center text-gray-600">
             {filterStatus !== "all" || filterPlanName !== "all"
-              ? `Tidak ada langganan dengan status "${filterStatus}".`
-              : "Anda belum memiliki langganan aktif."}{" "}
+              ? `Tidak ada langganan dengan kriteria tersebut.`
+              : "Anda belum memiliki langganan."}{" "}
             <Link
               href="/subscription"
               className="text-emerald-600 hover:underline"
@@ -356,17 +335,14 @@ export default function UserDashboardPage() {
                 onPauseClick={(s) => {
                   setSelectedSubscriptionToPause(s);
                   setIsPauseDialogOpen(true);
-                  setPauseMessage("");
                 }}
                 onCancelClick={(s) => {
                   setSelectedSubscriptionToCancel(s);
                   setIsCancelDialogOpen(true);
-                  setCancelMessage("");
                 }}
                 onResumeClick={(s) => {
                   setSelectedSubscriptionToResume(s);
-                  setIsResumeConfirmationDialogOpen(true);
-                  setResumeMessage("");
+                  setIsResumeDialogOpen(true);
                 }}
               />
             ))}
@@ -375,46 +351,24 @@ export default function UserDashboardPage() {
       </section>
 
       <PauseSubscriptionDialog
-        isPauseDialogOpen={isPauseDialogOpen}
-        setIsPauseDialogOpen={setIsPauseDialogOpen}
-        selectedSubscriptionToPause={selectedSubscriptionToPause}
-        pauseStartDate={pauseStartDate}
-        setPauseStartDate={setPauseStartDate}
-        pauseEndDate={pauseEndDate}
-        setPauseEndDate={setPauseEndDate}
-        pauseLoading={pauseLoading}
-        pauseMessage={pauseMessage}
-        setPauseMessage={setPauseMessage}
-        isPauseConfirmationDialogOpen={isPauseConfirmationDialogOpen}
-        setIsPauseConfirmationDialogOpen={setIsPauseConfirmationDialogOpen}
-        confirmPauseMessage={confirmPauseMessage}
-        setConfirmPauseMessage={setConfirmPauseMessage}
-        onConfirmPause={handleConfirmPause}
-        apiSuccessStatus={isDashboardSuccess}
+        isOpen={isPauseDialogOpen}
+        onClose={() => setIsPauseDialogOpen(false)}
+        subscription={selectedSubscriptionToPause}
+        onConfirm={handlePauseSubscription}
       />
 
       <CancelSubscriptionDialog
-        isCancelDialogOpen={isCancelDialogOpen}
-        setIsCancelDialogOpen={setIsCancelDialogOpen}
-        selectedSubscriptionToCancel={selectedSubscriptionToCancel}
-        cancelLoading={cancelLoading}
-        setCancelLoading={setCancelLoading}
-        cancelMessage={cancelMessage}
-        setCancelMessage={setCancelMessage}
-        onConfirmCancel={handleConfirmCancel}
-        apiSuccessStatus={isDashboardSuccess}
+        isOpen={isCancelDialogOpen}
+        onClose={() => setIsCancelDialogOpen(false)}
+        subscription={selectedSubscriptionToCancel}
+        onConfirm={handleCancelSubscription}
       />
 
       <ResumeSubscriptionDialog
-        isResumeConfirmationDialogOpen={isResumeConfirmationDialogOpen}
-        setIsResumeConfirmationDialogOpen={setIsResumeConfirmationDialogOpen}
-        selectedSubscriptionToResume={selectedSubscriptionToResume}
-        resumeLoading={resumeLoading}
-        setResumeLoading={setResumeLoading}
-        resumeMessage={resumeMessage}
-        setResumeMessage={setResumeMessage}
-        onConfirmResume={handleConfirmResume}
-        apiSuccessStatus={isDashboardSuccess}
+        isOpen={isResumeDialogOpen}
+        onClose={() => setIsResumeDialogOpen(false)}
+        subscription={selectedSubscriptionToResume}
+        onConfirm={handleResumeSubscription}
       />
     </div>
   );
