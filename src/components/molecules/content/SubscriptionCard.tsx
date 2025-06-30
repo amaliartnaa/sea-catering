@@ -8,8 +8,8 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@/src/components/ui/card";
-import { Button } from "@/src/components/ui/button";
+} from "@/src/components/atoms/ui/card";
+import { Button } from "@/src/components/atoms/ui/button";
 import { format } from "date-fns";
 import { Subscription } from "@/src/types/subscription";
 

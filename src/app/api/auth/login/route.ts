@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import prisma from "@/src/lib/prisma";
 import { cookies } from "next/headers";
 import { loginSchema } from "@/src/schemas/validationSchemas";
+import { ZodError } from "zod";
 
 const JWT_SECRET = process.env.JWT_SECRET || "supersecretjwtkeyfallback";
 
@@ -12,11 +13,12 @@ export async function POST(req: Request) {
     const body = await req.json();
     const validatedData = loginSchema.parse(body);
     const { email, password } = validatedData;
+
     const user = await prisma.user.findUnique({ where: { email } });
 
     if (!user || !user.password) {
       return NextResponse.json(
-        { message: "Invalid credentials." },
+        { message: "Email atau kata sandi Anda salah. Mohon coba lagi." },
         { status: 401 },
       );
     }
@@ -24,7 +26,7 @@ export async function POST(req: Request) {
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
       return NextResponse.json(
-        { message: "Invalid credentials." },
+        { message: "Email atau kata sandi Anda salah. Mohon coba lagi." },
         { status: 401 },
       );
     }
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
 
     const response = NextResponse.json(
       {
-        message: "Login successful!",
+        message: "Login berhasil!",
         user: {
           id: user.id,
           fullName: user.fullName,
@@ -59,23 +61,18 @@ export async function POST(req: Request) {
 
     return response;
   } catch (error: unknown) {
-    if (
-      error instanceof Error &&
-      "name" in error &&
-      error.name === "ZodError" &&
-      "errors" in error
-    ) {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         {
-          message: "Validation failed",
-          errors: (error as { errors: unknown }).errors,
+          message: "Data yang Anda masukkan tidak valid.",
+          errors: error.errors,
         },
         { status: 400 },
       );
     }
-    console.error("Error during login:", error);
+    console.error("Terjadi kesalahan saat login:", error);
     return NextResponse.json(
-      { message: "Internal server error during login." },
+      { message: "Terjadi kesalahan pada server. Mohon coba lagi nanti." },
       { status: 500 },
     );
   }

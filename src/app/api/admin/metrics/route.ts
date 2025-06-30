@@ -30,6 +30,7 @@ const getAuthenticatedAdminUser =
       return null;
     }
   };
+
 export async function GET(req: Request) {
   try {
     const authenticatedAdminUser = await getAuthenticatedAdminUser();
@@ -41,18 +42,16 @@ export async function GET(req: Request) {
     }
 
     const { searchParams } = new URL(req.url);
-    const startDate = searchParams.get("startDate");
-    const endDate = searchParams.get("endDate");
+    const startDateParam = searchParams.get("startDate");
+    const endDateParam = searchParams.get("endDate");
 
     let queryDateRange: Prisma.DateTimeFilter | undefined;
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (
-        isNaN(start.getTime()) ||
-        isNaN(end.getTime()) ||
-        isBefore(end, start)
-      ) {
+    if (startDateParam && endDateParam) {
+      const start = new Date(startDateParam);
+      const end = new Date(endDateParam);
+      end.setDate(end.getDate() + 1);
+
+      if (isNaN(start.getTime()) || isNaN(end.getTime()) || end < start) {
         return NextResponse.json(
           { message: "Invalid date range provided." },
           { status: 400 },
@@ -60,7 +59,7 @@ export async function GET(req: Request) {
       }
       queryDateRange = {
         gte: start,
-        lte: end,
+        lt: end,
       };
     }
 
@@ -95,16 +94,41 @@ export async function GET(req: Request) {
       },
     });
 
+    const totalCancelledSubscriptions = await prisma.subscription.count({
+      where: {
+        status: "cancelled",
+      },
+    });
+
+    const totalPausedSubscriptions = await prisma.subscription.count({
+      where: {
+        status: "paused",
+      },
+    });
+
     return NextResponse.json(
       {
         newSubscriptions,
         monthlyRecurringRevenue,
         reactivations,
         totalActiveSubscriptions,
+        totalCancelledSubscriptions,
+        totalPausedSubscriptions,
       },
       { status: 200 },
     );
   } catch (error: unknown) {
+    console.error("Error in GET /api/admin/metrics:", error);
+
+    if (
+      error instanceof jwt.JsonWebTokenError ||
+      error instanceof jwt.TokenExpiredError
+    ) {
+      return NextResponse.json(
+        { message: "Invalid or expired token." },
+        { status: 403 },
+      );
+    }
     if (
       typeof error === "object" &&
       error !== null &&
@@ -119,29 +143,10 @@ export async function GET(req: Request) {
         return NextResponse.json({ message }, { status: 400 });
       }
     }
-    if (
-      typeof error === "object" &&
-      error !== null &&
-      "name" in error &&
-      (error as { name: unknown }).name &&
-      typeof (error as { name: unknown }).name === "string" &&
-      ((error as { name: string }).name === "JsonWebTokenError" ||
-        (error as { name: string }).name === "TokenExpiredError")
-    ) {
-      return NextResponse.json(
-        { message: "Invalid or expired token." },
-        { status: 403 },
-      );
-    }
 
-    console.error("Error fetching admin metrics:", error);
     return NextResponse.json(
       { message: "Internal server error while fetching admin metrics." },
       { status: 500 },
     );
   }
-}
-
-function isBefore(end: Date, start: Date): boolean {
-  return end < start;
 }

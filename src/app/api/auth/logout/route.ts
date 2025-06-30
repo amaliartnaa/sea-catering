@@ -12,13 +12,13 @@ export async function POST() {
     });
 
     return NextResponse.json(
-      { message: "Logged out successfully." },
+      { message: "Anda berhasil keluar." },
       { status: 200 },
     );
   } catch (error) {
-    console.error("Error during logout:", error);
+    console.error("Terjadi kesalahan saat logout:", error);
     return NextResponse.json(
-      { message: "Internal server error during logout." },
+      { message: "Terjadi kesalahan pada server. Mohon coba lagi nanti." },
       { status: 500 },
     );
   }

@@ -3,14 +3,14 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Button } from "@/src/components/ui/button";
+import { Button } from "@/src/components/atoms/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/src/components/ui/sheet";
+} from "@/src/components/atoms/ui/sheet";
 import { useAuth } from "@/src/context/AuthContext";
 
 import {
@@ -32,7 +32,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "./ui/alert-dialog";
+} from "@/src/components/atoms/ui/alert-dialog";
 
 interface NavLinkItem {
   name: string;

@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import Navbar from "@/src/components/Navbar";
-import Footer from "@/src/components/Footer";
+import Navbar from "@/src/components/organisms/common/Navbar";
+import Footer from "@/src/components/organisms/common/Footer";
 import { AuthProvider } from "@/src/context/AuthContext";
 import { Toaster } from "sonner";
 import { useAuth } from "@/src/context/AuthContext";
