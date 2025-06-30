@@ -140,7 +140,7 @@ datasource db {
 }
 ```
 
-#### 🔐 Generate JWT Secret
+#### 🔐 How to generate JWT Secret if you confused
 
 ```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
