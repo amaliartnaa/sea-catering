@@ -16,71 +16,74 @@ You can view the live application here: [SEA Catering](https://cateringsea.verce
 
 This project follows a **monorepo architecture** where the frontend and backend logic reside in a single codebase. It leverages **Next.js API Routes** to integrate the backend functionality directly within the Next.js frontend application.
 
-- **Frontend**: Built with Next.js, React, TypeScript, Tailwind CSS, and shadcn/ui, deployed on Vercel.
-- **Backend Logic**: Implemented using Next.js API Routes (Node.js/TypeScript), deployed alongside the frontend on Vercel. This layer interacts with the database via **Prisma ORM**.
-- **Database**: PostgreSQL, hosted on Supabase.
-- **Deployment**: The entire application (frontend + API) is deployed as a single unit on Vercel, connecting to the external Supabase database.
+* **Frontend**: Built with Next.js, React, TypeScript, Tailwind CSS, and shadcn/ui, deployed on Vercel.
+* **Backend Logic**: Implemented using Next.js API Routes (Node.js/TypeScript), deployed alongside the frontend on Vercel. This layer interacts with the database via **Prisma ORM**.
+* **Database**: PostgreSQL, hosted on Supabase.
+* **Deployment**: The entire application (frontend + API) is deployed as a single unit on Vercel, connecting to the external Supabase database.
 
 ---
 
 ## 🛠️ Technologies Used
 
-- 🧭 **Next.js 15 with App Router**: React framework for fast web apps, server-side rendering, and API routes.
-- ⚛️ **React**: JavaScript library for building user interfaces.
-- 📘 **TypeScript**: Typed JavaScript for better code quality and maintainability.
-- 🎨 **Tailwind CSS**: Utility-first CSS for rapid, custom styling.
-- 🧩 **shadcn/ui**: Accessible UI components built with Radix UI and Tailwind.
-- 🛠️ **Prisma ORM**: Type-safe ORM for database interaction with PostgreSQL.
-- 🐘 **PostgreSQL (via Supabase)**: Powerful relational database, managed and hosted by Supabase.
-- 🔐 **bcryptjs**: Library for secure password hashing.
-- 🎟️ **jsonwebtoken (JWT)**: Standard for secure, token-based user authentication.
-- 🛡️ **csurf**: Middleware for CSRF protection in API Routes.
-- 📊 **Recharts**: React charting library for data visualization.
-- 🗓️ **date-fns**: Modern JavaScript library for date manipulation.
-- 🐶 **Husky**: Git hooks manager for automating tasks like linting and formatting before commits.
-- ✨ **Prettier**: Code formatter for consistent code style
-- 🧹 **ESLint**: Pluggable linter for indentifying and reporting on patterns in JavaScript/TypScript code.
-- 🧪 **Zod**: TypeScript-first schema declaration and validation library
+* 🧭 **Next.js 15 with App Router**: React framework for fast web apps, server-side rendering, and API routes.
+* ⚛️ **React**: JavaScript library for building user interfaces.
+* 📘 **TypeScript**: Typed JavaScript for better code quality and maintainability.
+* 🎨 **Tailwind CSS**: Utility-first CSS for rapid, custom styling.
+* 🧩 **shadcn/ui**: Accessible UI components built with Radix UI and Tailwind.
+* 🛠️ **Prisma ORM**: Type-safe ORM for database interaction with PostgreSQL.
+* 🐘 **PostgreSQL (via Supabase)**: Powerful relational database, managed and hosted by Supabase.
+* 🔐 **bcryptjs**: Library for secure password hashing.
+* 🎟️ **jsonwebtoken (JWT)**: Standard for secure, token-based user authentication.
+* 🛡️ **csurf**: Middleware for CSRF protection in API Routes.
+* 📊 **Recharts**: React charting library for data visualization.
+* 🗓️ **date-fns**: Modern JavaScript library for date manipulation.
+* 🐶 **Husky**: Git hooks manager for automating tasks like linting and formatting before commits.
+* ✨ **Prettier**: Code formatter for consistent code style
+* 🧹 **ESLint**: Pluggable linter for indentifying and reporting on patterns in JavaScript/TypScript code.
+* 🧪 **Zod**: TypeScript-first schema declaration and validation library
 
 ---
 
 ## 🍽️ Key Features
 
-- 🏠 **Homepage**: Engaging introduction with dynamic animations.
-- 🧭 **Interactive Navigation**: Seamless user experience with responsive UI and role-based menu items.
-- 🍱 **Meal Plans**: Browse and interact with various meal plans and modal previews.
-- 💬 **Testimonials**: Submit new customer reviews and view a dynamic testimonial carousel (displaying 5 latest).
-- 📦 **Subscription System**:
+* 🏠 **Homepage**: Engaging introduction with dynamic animations.
 
-  - Customizable form with live price updates.
-  - Secure submission to backend logic.
-  - Users can view, pause, cancel, and resume their active subscriptions.
+* 🧭 **Interactive Navigation**: Seamless user experience with responsive UI and role-based menu items.
 
-- 🔐 **User Authentication & Authorization**:
+* 🍱 **Meal Plans**: Browse and interact with various meal plans and modal previews.
 
-  - Register, login (email/password), and logout.
-  - Password strength validation during registration.
-  - Protected routes for authenticated users and specific roles.
-  - Authentication managed via HTTP-only JWT cookies.
+* 💬 **Testimonials**: Submit new customer reviews and view a dynamic testimonial carousel (displaying 5 latest).
 
-- 👤 **User Dashboard**: Personalized dashboard for managing subscriptions.
-- 🧮 **Admin Dashboard**: Comprehensive dashboard displaying key business metrics (new subscriptions, MRR, reactivations, total active subscriptions) with date range filtering and interactive charts.
+* 📦 **Subscription System**:
+
+  * Customizable form with live price updates.
+  * Secure submission to backend logic.
+  * Users can view, pause, cancel, and resume their active subscriptions.
+
+* 🔐 **User Authentication & Authorization**:
+
+  * Register, login (email/password), and logout.
+  * Password strength validation during registration.
+  * Protected routes for authenticated users and specific roles.
+  * Authentication managed via HTTP-only JWT cookies.
+
+* 👤 **User Dashboard**: Personalized dashboard for managing subscriptions.
+
+* 🧮 **Admin Dashboard**: Comprehensive dashboard displaying key business metrics (new subscriptions, MRR, reactivations, total active subscriptions) with date range filtering and interactive charts.
 
 ---
 
-## 🖥️ System Requirements
+## 💻 System Requirements
 
 Make sure you have the following installed on your machine:
 
-- **Node.js** (LTS version 18.x or higher recommended)
-- **pnpm** (recommended package manager)
-- An active **Supabase PostgreSQL database** for your project.
+* **Node.js** (LTS version 18.x or higher recommended)
+* **pnpm** (recommended package manager)
+* An active **Supabase PostgreSQL database** for your project.
 
 ---
 
 ## ⚙️ Installation & Local Setup Guide
-
-Follow these steps to get the application up and running on your local machine.
 
 ### 1. Clone the Repository
 
@@ -97,62 +100,51 @@ pnpm install
 
 ### 3. Environment Variables Configuration 🔐
 
-Create a `.env` file in the project root (sea-catering/). This file will contain sensitive information and should NOT be pushed to public Git repositories.
+Create a `.env` file in the project root (`sea-catering/`). This file contains sensitive credentials and should **never be committed** to version control.
+
+#### 📂 How to Configure Supabase with Prisma
+
+1. Go to [https://app.supabase.com](https://app.supabase.com) and open your project.
+2. In the sidebar, navigate to **Project Settings → Database**.
+3. Click the **ORMs** tab.
+4. Scroll to the section titled **`.env.local`** and copy its content.
+5. Paste it into your project’s `.env` file.
+6. Replace `[YOUR-PASSWORD]` with your actual **database password** (from the Connection Info section).
+
+#### ✅ Example `.env`
 
 ```env
-# Environment Variables for SEA Catering Application
+# Connection pooling (used by Prisma Client at runtime)
+DATABASE_URL="postgresql://postgres.hlrftyxknskphvlkaqgw:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
 
-DATABASE_URL="postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres"
-DIRECT_DATABASE_URL="postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR-PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres"
-JWT_SECRET="YOUR_VERY_STRONG_RANDOM_SECRET_KEY_HERE"
+# Direct connection (for migrations and CLI commands)
+DIRECT_URL="postgresql://postgres.hlrftyxknskphvlkaqgw:[YOUR-PASSWORD]@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres"
+
+# JWT secret for authentication
+JWT_SECRET="your_random_secret_key"
 ```
 
-To get the values for these variables, follow these steps:
+#### 🧠 Update `prisma/schema.prisma`
 
-#### --- Getting Supabase Database Connection Strings ---
+```prisma
+generator client {
+  provider = "prisma-client-js"
+}
 
-#### 1. Log in to your Supabase Dashboard:
-######    Go to [https://console.supabase.com/](https://console.supabase.com/) and log in.
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+```
 
-#### 2. Select your project.
+#### 🔐 Generate JWT Secret
 
-#### 3. Navigate to Project Settings:
-######    Click the gear icon (Project Settings) in the sidebar.
-######    Then, select "Database".
-
-#### 4. Find the "Connection string" section:
-######    You will see two crucial URIs here:
-
-######    a. For DATABASE_URL (Pooler, Transaction mode):
-######       Copy the "URI" provided under "Pooler" (Transaction mode).
-######       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@[aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres](https://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres)
-######       This is the connection string your running application (Next.js API Routes) will use.
-
-######    b. For DIRECT_DATABASE_URL (Direct Connection):
-######       Copy the "URI" provided under "Direct Connection".
-######       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres
-######       This is specifically used by Prisma CLI tools (like `npx prisma migrate dev`, `npx prisma generate`, `pnpm run db:seed`)
-######       for direct database operations.
-
-#### 5. Identify [YOUR_PROJECT_REF] and [YOUR_PASSWORD]:
-######    - [YOUR_PROJECT_REF] is the unique identifier found within both URIs (e.g., "hlrftyxknskphvlkaqgw").
-######    - [YOUR_PASSWORD] is the database password you set when you initially created your Supabase project.
-
-#### --- Generating JWT_SECRET ---
-
-#### 1. Open your terminal.
-
-#### 2. Run the following Node.js command:
-```env
+```bash
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 ```
 
-#### 3. Copy the generated hexadecimal string.
-#####    Use this strong, random string as your JWT_SECRET.
-
 ### 4. Database Setup & Migrations 🗄️
-
-After configuring your `.env` file, run Prisma migrations:
 
 ```bash
 npx prisma migrate dev --name initial_setup
@@ -178,14 +170,17 @@ The application will be available at: [http://localhost:3000](http://localhost:3
 ## ☁️ Deployment to Vercel
 
 1. Push your repository to GitHub
+
 2. Connect your repository to Vercel
+
 3. In the Vercel dashboard, add the following environment variables:
 
-   - `DATABASE_URL`
-   - `DIRECT_DATABASE_URL`
-   - `JWT_SECRET`
+   * `DATABASE_URL`
+   * `DIRECT_URL`
+   * `JWT_SECRET`
 
 4. Ensure these variables are available at both **Build** and **Runtime** scopes
+
 5. Vercel will deploy automatically on push to `main` branch
 
 ---
