@@ -30,6 +30,7 @@ export function TestimonialForm({
   const handleInternalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLocalSubmissionMessage("");
+    setLocalIsSubmissionSuccess(false);
 
     if (!reviewCustomerName || !reviewMessage || rating === 0) {
       setLocalSubmissionMessage(

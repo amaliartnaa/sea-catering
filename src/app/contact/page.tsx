@@ -4,13 +4,6 @@ import React, { useState, useCallback } from "react";
 import { ContactInfoSection } from "@/src/components/organisms/contact-page/ContactInfoSection";
 import { TestimonialForm } from "@/src/components/organisms/contact-page/TestimonialForm";
 
-interface ContactPayload {
-  name: string;
-  email: string;
-  subject: string;
-  message: string;
-}
-
 interface TestimonialPayload {
   customerName: string;
   reviewMessage: string;
@@ -18,7 +11,6 @@ interface TestimonialPayload {
 }
 
 export default function ContactPage() {
-  const [isSubmittingContact, setIsSubmittingContact] = useState(false);
   const [isSubmittingTestimonial, setIsSubmittingTestimonial] = useState(false);
 
   const fetchCsrfToken = useCallback(async () => {
@@ -41,11 +33,10 @@ export default function ContactPage() {
   const handleFormSubmission = useCallback(
     async (
       endpoint: string,
-      payload: any,
+      payload: TestimonialPayload,
       formType: "contact" | "testimonial",
     ) => {
-      if (formType === "contact") setIsSubmittingContact(true);
-      else setIsSubmittingTestimonial(true);
+      setIsSubmittingTestimonial(true);
 
       try {
         const csrfToken = await fetchCsrfToken();
@@ -74,8 +65,7 @@ export default function ContactPage() {
         );
         return false;
       } finally {
-        if (formType === "contact") setIsSubmittingContact(false);
-        else setIsSubmittingTestimonial(false);
+        setIsSubmittingTestimonial(false);
       }
     },
     [fetchCsrfToken],

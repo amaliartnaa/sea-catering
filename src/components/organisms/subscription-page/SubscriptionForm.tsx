@@ -15,27 +15,31 @@ import { cn } from "@/src/lib/utils";
 import { FormField } from "@/src/components/molecules/common/FormField";
 import { CheckboxGroup } from "@/src/components/molecules/common/CheckboxGroup";
 
-type MealType = "Breakfast" | "Lunch" | "Dinner";
-type DeliveryDay =
-  | "Monday"
-  | "Tuesday"
-  | "Wednesday"
-  | "Thursday"
-  | "Friday"
-  | "Saturday"
-  | "Sunday";
+import { Subscription } from "@/src/types/subscription";
+
+type SubscriptionFormData = Pick<
+  Subscription,
+  | "customerName"
+  | "phoneNumber"
+  | "planId"
+  | "mealTypes"
+  | "deliveryDays"
+  | "allergies"
+>;
+
+type MealType = Subscription["mealTypes"][number];
+type DeliveryDay = Subscription["deliveryDays"][number];
 
 interface SubscriptionFormProps {
-  onSubmit: (formData: any) => void;
   loading: boolean;
-  isAuthenticated: boolean;
-  onOpenConfirmDialog: (data: any, calculatedPrice: number) => void;
+  onOpenConfirmDialog: (
+    data: SubscriptionFormData,
+    calculatedPrice: number,
+  ) => void;
 }
 
 export function SubscriptionForm({
-  onSubmit,
   loading,
-  isAuthenticated,
   onOpenConfirmDialog,
 }: SubscriptionFormProps) {
   const [customerName, setCustomerName] = useState<string>("");
@@ -49,7 +53,6 @@ export function SubscriptionForm({
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [isFormValid, setIsFormValid] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-
   const allMealTypes: MealType[] = ["Breakfast", "Lunch", "Dinner"];
   const allDeliveryDays: DeliveryDay[] = [
     "Monday",
@@ -149,7 +152,7 @@ export function SubscriptionForm({
     e.preventDefault();
     setErrors({});
 
-    let newErrors: Record<string, string> = {};
+    const newErrors: Record<string, string> = {};
     if (customerName.trim() === "")
       newErrors.customerName = "Nama lengkap wajib diisi.";
     if (phoneNumber.trim() === "")
@@ -166,7 +169,7 @@ export function SubscriptionForm({
       return;
     }
 
-    const formData = {
+    const formData: SubscriptionFormData = {
       customerName,
       phoneNumber,
       planId: selectedPlanId,
@@ -189,6 +192,7 @@ export function SubscriptionForm({
         onChange={handleChange}
         error={errors.customerName}
         required
+        disabled={loading}
       />
 
       <FormField
@@ -200,6 +204,7 @@ export function SubscriptionForm({
         error={errors.phoneNumber}
         placeholder="Contoh: 081234567890"
         required
+        disabled={loading}
       />
 
       <div className="grid w-full items-center gap-2">
@@ -210,6 +215,7 @@ export function SubscriptionForm({
           value={selectedPlanId}
           onValueChange={handlePlanSelectChange}
           required
+          disabled={loading}
         >
           <SelectTrigger
             id="planSelection"
@@ -267,6 +273,7 @@ export function SubscriptionForm({
         error={errors.allergies}
         as="textarea"
         placeholder="Contoh: Alergi kacang, tidak suka pedas, gluten-free..."
+        disabled={loading}
       />
 
       <div className="bg-emerald-50 p-6 rounded-lg text-center border border-emerald-200">

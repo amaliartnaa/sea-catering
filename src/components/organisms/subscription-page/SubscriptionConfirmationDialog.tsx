@@ -1,6 +1,16 @@
 import React from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/src/components/atoms/ui/dialog";
 import { Button } from "@/src/components/atoms/ui/button";
 import { MEAL_PLANS } from "@/src/lib/constants";
+
+import { Subscription } from "@/src/types/subscription";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -10,18 +20,21 @@ import {
   AlertDialogTitle,
 } from "../../atoms/ui/alert-dialog";
 
+type SubscriptionFormData = Pick<
+  Subscription,
+  | "customerName"
+  | "phoneNumber"
+  | "planId"
+  | "mealTypes"
+  | "deliveryDays"
+  | "allergies"
+>;
+
 interface SubscriptionConfirmationDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onConfirm: () => void;
-  formData: {
-    customerName: string;
-    phoneNumber: string;
-    planId: string;
-    mealTypes: string[];
-    deliveryDays: string[];
-    allergies: string | null;
-  } | null;
+  formData: SubscriptionFormData | null;
   totalPrice: number;
   loading: boolean;
 }
