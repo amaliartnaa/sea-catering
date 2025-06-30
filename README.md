@@ -109,44 +109,46 @@ JWT_SECRET="YOUR_VERY_STRONG_RANDOM_SECRET_KEY_HERE"
 
 To get the values for these variables, follow these steps:
 
-# --- Getting Supabase Database Connection Strings ---
+#### --- Getting Supabase Database Connection Strings ---
 
-# 1. Log in to your Supabase Dashboard:
-#    Go to [console.supabase.com/](https://console.supabase.com/) and log in.
+#### 1. Log in to your Supabase Dashboard:
+######    Go to [https://console.supabase.com/](https://console.supabase.com/) and log in.
 
-# 2. Select your project.
+#### 2. Select your project.
 
-# 3. Navigate to Project Settings:
-#    Click the gear icon (Project Settings) in the sidebar.
-#    Then, select "Database".
+#### 3. Navigate to Project Settings:
+######    Click the gear icon (Project Settings) in the sidebar.
+######    Then, select "Database".
 
-# 4. Find the "Connection string" section:
-#    You will see two crucial URIs here:
+#### 4. Find the "Connection string" section:
+######    You will see two crucial URIs here:
 
-#    a. For DATABASE_URL (Pooler, Transaction mode):
-#       Copy the "URI" provided under "Pooler" (Transaction mode).
-#       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@[aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres](https://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres)
-#       This is the connection string your running application (Next.js API Routes) will use.
+######    a. For DATABASE_URL (Pooler, Transaction mode):
+######       Copy the "URI" provided under "Pooler" (Transaction mode).
+######       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@[aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres](https://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres)
+######       This is the connection string your running application (Next.js API Routes) will use.
 
-#    b. For DIRECT_DATABASE_URL (Direct Connection):
-#       Copy the "URI" provided under "Direct Connection".
-#       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres
-#       This is specifically used by Prisma CLI tools (like `npx prisma migrate dev`, `npx prisma generate`, `pnpm run db:seed`)
-#       for direct database operations.
+######    b. For DIRECT_DATABASE_URL (Direct Connection):
+######       Copy the "URI" provided under "Direct Connection".
+######       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres
+######       This is specifically used by Prisma CLI tools (like `npx prisma migrate dev`, `npx prisma generate`, `pnpm run db:seed`)
+######       for direct database operations.
 
-# 5. Identify [YOUR_PROJECT_REF] and [YOUR_PASSWORD]:
-#    - [YOUR_PROJECT_REF] is the unique identifier found within both URIs (e.g., "hlrftyxknskphvlkaqgw").
-#    - [YOUR_PASSWORD] is the database password you set when you initially created your Supabase project.
+#### 5. Identify [YOUR_PROJECT_REF] and [YOUR_PASSWORD]:
+######    - [YOUR_PROJECT_REF] is the unique identifier found within both URIs (e.g., "hlrftyxknskphvlkaqgw").
+######    - [YOUR_PASSWORD] is the database password you set when you initially created your Supabase project.
 
-# --- Generating JWT_SECRET ---
+#### --- Generating JWT_SECRET ---
 
-# 1. Open your terminal.
+#### 1. Open your terminal.
 
-# 2. Run the following Node.js command:
+#### 2. Run the following Node.js command:
+```env
 node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
-# 3. Copy the generated hexadecimal string.
-#    Use this strong, random string as your JWT_SECRET.
+#### 3. Copy the generated hexadecimal string.
+#####    Use this strong, random string as your JWT_SECRET.
 
 ### 4. Database Setup & Migrations 🗄️
 
