@@ -28,7 +28,7 @@ export function ContactInfoSection() {
         </ContactInfoCard>
         <ContactInfoCard icon={FaMapMarkerAlt} title="Alamat">
           <p className="text-gray-700 text-md">
-            Jl. Contoh Catering No. 123, Surabaya
+            Jl. Bunga Mawar No. 14, Surabaya
           </p>
         </ContactInfoCard>
         <ContactInfoCard
