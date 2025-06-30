@@ -107,10 +107,46 @@ DIRECT_DATABASE_URL="postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR-PASSWORD]@db
 JWT_SECRET="YOUR_VERY_STRONG_RANDOM_SECRET_KEY_HERE"
 ```
 
-> Replace `[YOUR_PROJECT_REF]`, `[YOUR_PASSWORD]`, and `YOUR_VERY_STRONG_RANDOM_SECRET_KEY_HERE` with your actual Supabase project details and secret key.
+To get the values for these variables, follow these steps:
 
-> How to generate your JWT_SECRET if you confused:  
-> `node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"`
+# --- Getting Supabase Database Connection Strings ---
+
+# 1. Log in to your Supabase Dashboard:
+#    Go to [console.supabase.com/](https://console.supabase.com/) and log in.
+
+# 2. Select your project.
+
+# 3. Navigate to Project Settings:
+#    Click the gear icon (Project Settings) in the sidebar.
+#    Then, select "Database".
+
+# 4. Find the "Connection string" section:
+#    You will see two crucial URIs here:
+
+#    a. For DATABASE_URL (Pooler, Transaction mode):
+#       Copy the "URI" provided under "Pooler" (Transaction mode).
+#       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@[aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres](https://aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres)
+#       This is the connection string your running application (Next.js API Routes) will use.
+
+#    b. For DIRECT_DATABASE_URL (Direct Connection):
+#       Copy the "URI" provided under "Direct Connection".
+#       Example format: postgresql://postgres.[YOUR_PROJECT_REF]:[YOUR_PASSWORD]@db.[YOUR_PROJECT_REF].supabase.co:5432/postgres
+#       This is specifically used by Prisma CLI tools (like `npx prisma migrate dev`, `npx prisma generate`, `pnpm run db:seed`)
+#       for direct database operations.
+
+# 5. Identify [YOUR_PROJECT_REF] and [YOUR_PASSWORD]:
+#    - [YOUR_PROJECT_REF] is the unique identifier found within both URIs (e.g., "hlrftyxknskphvlkaqgw").
+#    - [YOUR_PASSWORD] is the database password you set when you initially created your Supabase project.
+
+# --- Generating JWT_SECRET ---
+
+# 1. Open your terminal.
+
+# 2. Run the following Node.js command:
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+
+# 3. Copy the generated hexadecimal string.
+#    Use this strong, random string as your JWT_SECRET.
 
 ### 4. Database Setup & Migrations 🗄️
 
