@@ -248,7 +248,7 @@ The application will be available at: [http://localhost:3000](http://localhost:3
 
 ---
 
-## 🧑‍💻 Guide for Testing Admin Access
+## 🧑‍💻 Guide for Testing Admin Access + View Database
 
 1. Stop your application server:
 
